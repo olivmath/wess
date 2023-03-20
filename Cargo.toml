@@ -1,8 +1,17 @@
 [package]
 name = "wess"
 version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Lucas Oliveira olivmath@protonmail.com"]
+edition = "2018"
 
 [dependencies]
+rocksdb = "0.20.1"
+tokio = { version = "1.14.0", features = ["full"] }
+hyper = "0.14.25"
+quinn = "0.9.3"
+wasmtime = "6.0.1"
+bellman = "0.13.1"
+bulletproofs = "4.0.0"
+
+[features]
+default = []
