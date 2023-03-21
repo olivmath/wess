@@ -1,3 +1,5 @@
+//! The `database` module provides a simple API for interacting with a RocksDB database.
+
 use lazy_static::lazy_static;
 use rocksdb::{DBWithThreadMode, Error, IteratorMode, MultiThreaded, Options, DB as DataBase};
 use std::sync::{Arc, Mutex};
