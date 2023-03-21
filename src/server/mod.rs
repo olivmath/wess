@@ -38,34 +38,32 @@ impl WessServer {
 }
 
 
-// mod.rs (parte do arquivo)
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::database::rocksdb::RocksDB;
     use async_std::task;
+    use tide::StatusCode;
     use tide_testing::TideTestingExt;
 
     #[test]
     fn test_wess_server_new() {
-        let db = RocksDB::new();
-        let _server = WessServer::new(db);
+        let _server = WessServer::new();
     }
 
     #[test]
     fn test_wess_server_run() {
         task::block_on(async {
-            let db = RocksDB::new();
-            let server = WessServer::new(db);
+            let server = WessServer::new();
             let client = server.app.client();
-    
+
             let server_task = task::spawn(async move {
                 server.run("127.0.0.1:777").await.unwrap();
             });
-    
+
             let resp = client.get("/").send().await.unwrap();
             assert_eq!(resp.status(), StatusCode::Ok);
-    
+
             server_task.cancel().await;
         });
     }
