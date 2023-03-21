@@ -20,7 +20,7 @@ pub struct WessServer {
 /// AppState represents the shared state of the application, including the RocksDB instance.
 #[derive(Clone)]
 struct AppState {
-    rocks_db: Arc<RocksDB>,
+    _rocks_db: Arc<RocksDB>,
 }
 
 impl WessServer {
@@ -31,7 +31,7 @@ impl WessServer {
     /// * `db` - A RocksDB instance to be used for the server's state.
     pub fn new(db: RocksDB) -> WessServer {
         let mut app = tide::with_state(AppState {
-            rocks_db: db.into(),
+            _rocks_db: db.into(),
         });
 
         app.at("/")
