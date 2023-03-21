@@ -11,13 +11,7 @@ use tide::Server;
 
 /// WessServer is a struct that encapsulates the Tide server instance.
 pub struct WessServer {
-    app: Server<AppState>,
-}
-
-/// AppState represents the shared state of the application, including the RocksDB instance.
-#[derive(Clone)]
-struct AppState {
-    _rocks_db: Arc<RocksDB>,
+    app: Server<()>,
 }
 
 impl WessServer {
@@ -26,10 +20,8 @@ impl WessServer {
     /// # Arguments
     ///
     /// * `db` - A RocksDB instance to be used for the server's state.
-    pub fn new(db: RocksDB) -> WessServer {
-        let mut app = tide::with_state(AppState {
-            _rocks_db: db.into(),
-        });
+    pub fn new() -> WessServer {
+        let mut app = tide::new();
 
         app.at("/").get(|_| async { all_wasm() });
 
