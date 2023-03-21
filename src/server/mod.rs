@@ -44,7 +44,9 @@ impl WessServer {
     ///
     /// This version of WessServer supports the following routes:
     /// * `GET "/"`: Responds with a status code of 200 (OK) without any additional content.
-    pub async fn run(self) -> std::io::Result<()> {
-        self.app.listen("127.0.0.1:3000").await
+    pub async fn run(self, addr: &str) -> std::io::Result<()> {
+        self.app.listen(addr).await
+    }
+}
     }
 }
