@@ -3,7 +3,6 @@ use std::error::Error;
 use term_size::dimensions;
 use textwrap::fill;
 
-
 /// Logs the given text to stdout, wrapped and formatted according to the terminal width.
 ///
 /// The input text is wrapped based on the terminal width, and the wrapped text is printed
@@ -28,9 +27,9 @@ use textwrap::fill;
 /// ```
 /// stdout_log("This is a sample log message.").await.unwrap();
 /// ```
-/// 
+///
 /// # Result in Terminal
-/// 
+///
 /// ```
 /// // ------------------------------------------------------------
 /// // This is a sample log message.
