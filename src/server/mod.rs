@@ -3,7 +3,6 @@
 //! It provides an HTTP server built on top of the Tide framework to handle incoming requests,
 //! which are then processed accordingly based on the registered routes.
 
-pub mod request_handlers;
 pub mod routes;
 
 use self::routes::{add_new_wasm, get_wasm, remove_wasm, update_wasm};
