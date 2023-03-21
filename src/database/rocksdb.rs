@@ -70,8 +70,9 @@ impl RocksDB {
     /// # Returns
     ///
     /// * `Result<(), Error>` - An empty result on success or an error on failure.
-    pub fn put(&mut self, key: &str, value: Vec<u8>) -> Result<(), Error> {
-        self.db.lock().unwrap().put(key.as_bytes(), &value)
+    pub fn put(&mut self, key: &str, wasm: Wasm) -> Result<(), Error> {
+        let value = serde_json::to_vec(&wasm).unwrap();
+        self.db.lock().unwrap().put(key.as_bytes(), value)
     }
 
     /// Retrieves a value from the database based on the supplied key.
@@ -83,8 +84,11 @@ impl RocksDB {
     /// # Returns
     ///
     /// * `Option<Vec<u8>>` - An option containing a byte array if the key exists or `None` if the key does not exist.
-    pub fn get(&self, key: &str) -> Option<Vec<u8>> {
-        self.db.lock().unwrap().get(key.as_bytes()).unwrap()
+    pub fn get(&self, key: &str) -> Option<Wasm> {
+        match self.db.lock().unwrap().get(key.as_bytes()).unwrap() {
+            Some(v) => serde_json::from_slice(&v).unwrap(),
+            None => None,
+        }
     }
 
     /// Deletes a value from the database based on the given key.
