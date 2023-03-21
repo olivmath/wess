@@ -4,12 +4,14 @@ pub mod server;
 mod wasm;
 
 use database::RocksDB;
-use logger::stdout_log;
+use logger::{clear_terminal_with, stdout_log};
 use server::WessServer;
 use std::error::Error;
 
 #[async_std::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    clear_terminal_with("");
+
     stdout_log("💽 Start RocksDB data base").await?;
     let _db = RocksDB::new();
 
