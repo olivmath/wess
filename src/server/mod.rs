@@ -5,7 +5,6 @@
 
 pub mod request_handlers;
 pub mod routes;
-pub mod tls;
 
 use super::database::rocksdb::RocksDB;
 use std::sync::Arc;
