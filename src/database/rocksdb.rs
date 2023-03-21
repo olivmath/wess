@@ -1,9 +1,9 @@
 //! The `database` module provides a simple API for interacting with a RocksDB database.
 
+use super::super::wasm::Wasm;
 use lazy_static::lazy_static;
 use rocksdb::{DBWithThreadMode, Error, IteratorMode, MultiThreaded, Options, DB as DataBase};
 use std::sync::{Arc, Mutex};
-use super::wasm::Wasm;
 
 // Creating the single instance of RocksDB with inter-thread security.
 lazy_static! {
@@ -47,7 +47,7 @@ impl RocksDB {
     }
 
     /// # [`TEST ONLY`]
-    /// 
+    ///
     /// Creates a new instance of the `RocksDB` structure, which is used to interact with a temporary RocksDB database, used only for testing purposes.
     ///
     /// # Arguments
@@ -63,30 +63,30 @@ impl RocksDB {
         }
     }
 
-    /// Stores a value in the database associated with the given key.
+    /// Puts a `Wasm` instance into the database under the given key.
     ///
     /// # Arguments
     ///
-    /// * `key` - A string that represents the key.
-    /// * `value` - An array of bytes representing the value to be stored.
+    /// * `key` - A string slice that represents the key of the `Wasm` instance.
+    /// * `wasm` - A `Wasm` instance to be stored in the database.
     ///
     /// # Returns
     ///
-    /// * `Result<(), Error>` - An empty result on success or an error on failure.
+    /// A `Result` indicating success or failure of the operation.
     pub fn put(&mut self, key: &str, wasm: Wasm) -> Result<(), Error> {
         let value = serde_json::to_vec(&wasm).unwrap();
         self.db.lock().unwrap().put(key.as_bytes(), value)
     }
 
-    /// Retrieves a value from the database based on the supplied key.
+    /// Retrieves a `Wasm` instance from the database by its key.
     ///
     /// # Arguments
     ///
-    /// * `key` - A string that represents the key.
+    /// * `key` - A string slice that represents the key of the `Wasm` instance.
     ///
     /// # Returns
     ///
-    /// * `Option<Vec<u8>>` - An option containing a byte array if the key exists or `None` if the key does not exist.
+    /// An `Option` that wraps the `Wasm` instance if it is found in the database.
     pub fn get(&self, key: &str) -> Option<Wasm> {
         match self.db.lock().unwrap().get(key.as_bytes()).unwrap() {
             Some(v) => serde_json::from_slice(&v).unwrap(),
@@ -94,19 +94,25 @@ impl RocksDB {
         }
     }
 
-    /// Deletes a value from the database based on the given key.
+    /// Deletes a `Wasm` instance from the database by its key.
     ///
     /// # Arguments
     ///
-    /// * `key` - A string representing the key.
+    /// * `key` - A string slice that represents the key of the `Wasm` instance.
     ///
     /// # Returns
     ///
-    /// * `Result<(), Error>` - An empty result on success or an error on failure.
+    /// A `Result` indicating success or failure of the operation.
     pub fn del(&mut self, key: &str) -> Result<(), Error> {
         self.db.lock().unwrap().delete(key.as_bytes())
     }
 
+    /// Retrieves all `Wasm` instances from the database.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec` that contains `Option<Wasm>` elements. Each element is either `Some(Wasm)`
+    /// if a `Wasm` instance was found in the database, or `None` if an error occurred.
     pub fn get_all(&self) -> Vec<Option<Wasm>> {
         self.db
             .lock()
