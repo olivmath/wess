@@ -123,7 +123,7 @@ impl RocksDB {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::wasm::wasm::{Wasm, WasmFnArgs, WasmMetadata};
+    use crate::wasm::{Wasm, WasmFnArgs, WasmMetadata};
 
     fn wasm_mocked() -> Wasm {
         Wasm {
@@ -152,55 +152,44 @@ mod tests {
     #[test]
     fn test_put_and_get_data() {
         let data = wasm_mocked();
-        let mut db = RocksDB::new();
+        let mut db = RocksDB::dev();
 
-        let key = "mykey";
-        let value = serde_json::to_vec(&data).unwrap();
+        db.put("key01", data.clone()).unwrap();
 
-        db.put(key, value).unwrap();
-        let result = {
-            let result = db.get(key).unwrap();
-            serde_json::from_slice(&result).unwrap()
-        };
-
+        let result = db.get("key01").unwrap();
         assert_eq!(data, result);
+
+        drop(db.db.lock().unwrap());
     }
 
     #[test]
     fn test_update_data() {
         let data = wasm_mocked();
-        let mut db = RocksDB::new();
+        let mut db = RocksDB::dev();
 
-        let key = "update_key";
-        let value = serde_json::to_vec(&data).unwrap();
-        db.put(key, value).unwrap();
+        db.put("key02", data.clone()).unwrap();
 
         let mut updated_data = data.clone();
-        let updated_value = {
-            updated_data.metadata.id = 456;
-            serde_json::to_vec(&updated_data).unwrap()
-        };
-        db.put(key, updated_value).unwrap();
+        updated_data.metadata.id = 456;
+        db.put("key02", updated_data.clone()).unwrap();
 
-        let result = {
-            let result = db.get(key).unwrap();
-            serde_json::from_slice(&result).unwrap()
-        };
+        let result = db.get("key02").unwrap();
         assert_eq!(updated_data, result);
+
+        drop(db.db.lock().unwrap());
     }
 
     #[test]
     fn test_delete_data() {
         let data = wasm_mocked();
-        let mut db = RocksDB::new();
+        let mut db = RocksDB::dev();
 
-        let key = "delete_key";
-        let value = serde_json::to_vec(&data).unwrap();
+        db.put("key03", data).unwrap();
+        db.del("key03").unwrap();
 
-        db.put(key, value).unwrap();
-        db.del(key).unwrap();
-
-        let result = db.get(key);
+        let result = db.get("key03");
         assert!(result.is_none());
+
+        drop(db.db.lock().unwrap());
     }
 }
