@@ -1,9 +1,8 @@
+use lazy_static::lazy_static;
+use rocksdb::{DBWithThreadMode, Error, MultiThreaded, Options, DB as DataBase};
 use std::sync::{Arc, Mutex};
 
-use rocksdb::{DBWithThreadMode, Error, MultiThreaded, Options, DB as DataBase};
-
-use lazy_static::lazy_static;
-
+// Creating the single instance of RocksDB with inter-thread security.
 lazy_static! {
     static ref DB: Arc<Mutex<DBWithThreadMode<MultiThreaded>>> = {
         let path = "./rocksdb";
@@ -17,25 +16,59 @@ lazy_static! {
     };
 }
 
-struct RocksDB {
+/// The `RocksDB` framework provides a simple API for interacting with the RocksDB database.
+pub struct RocksDB {
     db: Arc<Mutex<DBWithThreadMode<MultiThreaded>>>,
 }
 
 impl RocksDB {
-    fn new() -> Self {
+    /// Creates a new instance of the `RocksDB` structure.
+    ///
+    /// # Returns
+    ///
+    /// * An instance of `RocksDB`.
+    pub fn new() -> Self {
         RocksDB {
             db: Arc::clone(&DB),
         }
     }
 
+    /// Stores a value in the database associated with the given key.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - A string that represents the key.
+    /// * `value` - An array of bytes representing the value to be stored.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), Error>` - An empty result on success or an error on failure.
     pub fn put(&mut self, key: &str, value: Vec<u8>) -> Result<(), Error> {
         self.db.lock().unwrap().put(key.as_bytes(), &value)
     }
 
+    /// Retrieves a value from the database based on the supplied key.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - A string that represents the key.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<Vec<u8>>` - An option containing a byte array if the key exists or `None` if the key does not exist.
     pub fn get(&self, key: &str) -> Option<Vec<u8>> {
         self.db.lock().unwrap().get(key.as_bytes()).unwrap()
     }
 
+    /// Deletes a value from the database based on the given key.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - A string representing the key.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), Error>` - An empty result on success or an error on failure.
     pub fn del(&mut self, key: &str) -> Result<(), Error> {
         self.db.lock().unwrap().delete(key.as_bytes())
     }
