@@ -6,7 +6,7 @@
 pub mod request_handlers;
 pub mod routes;
 
-use self::routes::all_wasm;
+use self::routes::{add_new_wasm, get_wasm, remove_wasm, update_wasm};
 use tide::Server;
 
 /// WessServer is a struct that encapsulates the Tide server instance.
@@ -23,7 +23,11 @@ impl WessServer {
     pub fn new() -> WessServer {
         let mut app = tide::new();
 
-        app.at("/").get(|_| async { all_wasm() });
+        app.at("/:id").get(|req| async { get_wasm(req) });
+        app.at("/")
+            .post(|req| async { add_new_wasm(req) })
+            .put(|req| async { update_wasm(req) })
+            .delete(|req| async { remove_wasm(req) });
 
         WessServer { app }
     }
@@ -36,8 +40,6 @@ impl WessServer {
         self.app.listen(addr).await
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
