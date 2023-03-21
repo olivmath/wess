@@ -15,5 +15,5 @@ rocksdb = { version = "0.20.1", features = ["multi-threaded-cf"] }
 lazy_static = "1.4.0"
 # wasmtime = "6.0.1"
 colored = "2.0.0"
-# tide = "0.16.0"
+tide = "0.16.0"
 # quinn = "0.9.3"
