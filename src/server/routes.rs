@@ -1,11 +1,22 @@
-use super::super::database::RocksDB;
-use super::super::wasm::Wasm;
-use serde_json::json;
-use tide::{Error, Response};
+use tide::{Error, Request, Response, StatusCode};
 
-pub fn all_wasm() -> Result<Response, Error> {
-    let db = RocksDB::new();
 
-    let wasms: Vec<Wasm> = db.get_all().into_iter().filter_map(|v| v).collect();
-    Ok(Response::builder(200).body(json!(wasms)).build())
+pub fn get_wasm(_req: Request<()>) -> Result<Response, Error> {
+    Ok(Response::builder(StatusCode::Ok).body("get wasm").build())
+}
+
+pub fn add_new_wasm(_req: Request<()>) -> Result<Response, Error> {
+    Ok(Response::builder(StatusCode::Ok).body("new wasm").build())
+}
+
+pub fn update_wasm(_req: Request<()>) -> Result<Response, Error> {
+    Ok(Response::builder(StatusCode::Ok)
+        .body("update wasm")
+        .build())
+}
+
+pub fn remove_wasm(_req: Request<()>) -> Result<Response, Error> {
+    Ok(Response::builder(StatusCode::Ok)
+        .body("delete wasm")
+        .build())
 }
