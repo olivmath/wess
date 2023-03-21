@@ -5,7 +5,17 @@ use std::sync::{Arc, Mutex};
 // Creating the single instance of RocksDB with inter-thread security.
 lazy_static! {
     static ref DB: Arc<Mutex<DBWithThreadMode<MultiThreaded>>> = {
-        let path = "./rocksdb";
+        let path = "./rocksdb/prod";
+        let mut options = Options::default();
+        options.create_if_missing(true);
+
+        match DataBase::open_default(path) {
+            Ok(db) => Arc::new(Mutex::new(db)),
+            Err(err) => panic!("DB dont open: {}", err),
+        }
+    };
+    static ref DEV_DB: Arc<Mutex<DBWithThreadMode<MultiThreaded>>> = {
+        let path = "./rocksdb/dev";
         let mut options = Options::default();
         options.create_if_missing(true);
 
@@ -30,6 +40,23 @@ impl RocksDB {
     pub fn new() -> Self {
         RocksDB {
             db: Arc::clone(&DB),
+        }
+    }
+
+    /// # [`TEST ONLY`]
+    /// 
+    /// Creates a new instance of the `RocksDB` structure, which is used to interact with a temporary RocksDB database, used only for testing purposes.
+    ///
+    /// # Arguments
+    ///
+    /// This function does not take any arguments.
+    ///
+    /// # Returns
+    ///
+    /// * An instance of `RocksDB` - a structure that provides a simple API for interacting with a temporary RocksDB database used for testing purposes.
+    pub fn dev() -> Self {
+        RocksDB {
+            db: Arc::clone(&DEV_DB),
         }
     }
 
