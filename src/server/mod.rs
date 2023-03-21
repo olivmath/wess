@@ -6,10 +6,8 @@
 pub mod request_handlers;
 pub mod routes;
 
-use super::database::rocksdb::RocksDB;
-use std::sync::Arc;
+use self::routes::all_wasm;
 use tide::Server;
-use tide::{Response, StatusCode};
 
 /// WessServer is a struct that encapsulates the Tide server instance.
 pub struct WessServer {
@@ -33,8 +31,7 @@ impl WessServer {
             _rocks_db: db.into(),
         });
 
-        app.at("/")
-            .get(|_| async { Ok(Response::new(StatusCode::Ok)) });
+        app.at("/").get(|_| async { all_wasm() });
 
         WessServer { app }
     }
@@ -42,7 +39,7 @@ impl WessServer {
     /// Starts the HTTP server and listens for incoming connections.
     ///
     /// This version of WessServer supports the following routes:
-    /// * `GET "/"`: Responds with a status code of 200 (OK) without any additional content.
+    /// * `GET "/"`: Responds with a status code of 200 (OK) with a list of all Wasms saved.
     pub async fn run(self, addr: &str) -> std::io::Result<()> {
         self.app.listen(addr).await
     }
