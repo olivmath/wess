@@ -99,6 +99,18 @@ impl RocksDB {
     pub fn del(&mut self, key: &str) -> Result<(), Error> {
         self.db.lock().unwrap().delete(key.as_bytes())
     }
+
+    pub fn get_all(&self) -> Vec<Option<Wasm>> {
+        self.db
+            .lock()
+            .unwrap()
+            .iterator(IteratorMode::Start)
+            .map(|item| match item {
+                Ok((_, v)) => Some(serde_json::from_slice(&v).unwrap()),
+                Err(_) => None,
+            })
+            .collect()
+    }
 }
 
 #[cfg(test)]
