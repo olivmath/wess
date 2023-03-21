@@ -1,5 +1,7 @@
 //! The `database` module provides a simple API for interacting with a RocksDB database.
 
+#![allow(dead_code)]
+
 use super::wasm::Wasm;
 use lazy_static::lazy_static;
 use rocksdb::{DBWithThreadMode, Error, IteratorMode, MultiThreaded, Options, DB as DataBase};
@@ -158,44 +160,44 @@ mod tests {
     #[test]
     fn test_put_and_get_data() {
         let data = wasm_mocked();
-        let mut db = RocksDB::dev();
+        let mut rocksdb = RocksDB::dev();
 
-        db.put("key01", data.clone()).unwrap();
+        rocksdb.put("key01", data.clone()).unwrap();
 
-        let result = db.get("key01").unwrap();
+        let result = rocksdb.get("key01").unwrap();
         assert_eq!(data, result);
 
-        drop(db.db.lock().unwrap());
+        drop(rocksdb.db.lock().unwrap());
     }
 
     #[test]
     fn test_update_data() {
         let data = wasm_mocked();
-        let mut db = RocksDB::dev();
+        let mut rocksdb = RocksDB::dev();
 
-        db.put("key02", data.clone()).unwrap();
+        rocksdb.put("key02", data.clone()).unwrap();
 
         let mut updated_data = data.clone();
         updated_data.metadata.id = 456;
-        db.put("key02", updated_data.clone()).unwrap();
+        rocksdb.put("key02", updated_data.clone()).unwrap();
 
-        let result = db.get("key02").unwrap();
+        let result = rocksdb.get("key02").unwrap();
         assert_eq!(updated_data, result);
 
-        drop(db.db.lock().unwrap());
+        drop(rocksdb.db.lock().unwrap());
     }
 
     #[test]
     fn test_delete_data() {
         let data = wasm_mocked();
-        let mut db = RocksDB::dev();
+        let mut rocksdb = RocksDB::dev();
 
-        db.put("key03", data).unwrap();
-        db.del("key03").unwrap();
+        rocksdb.put("key03", data).unwrap();
+        rocksdb.del("key03").unwrap();
 
-        let result = db.get("key03");
+        let result = rocksdb.get("key03");
         assert!(result.is_none());
 
-        drop(db.db.lock().unwrap());
+        drop(rocksdb.db.lock().unwrap());
     }
 }
