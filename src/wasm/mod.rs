@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use serde_json::json;
+use tide::Response;
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct WasmFnArgs {
@@ -21,4 +23,10 @@ pub struct WasmMetadata {
 pub struct Wasm {
     pub wasm: Vec<u8>,
     pub metadata: WasmMetadata,
+}
+
+impl Into<Response> for Wasm {
+    fn into(self) -> Response {
+        Response::builder(200).body(json!(self.wasm)).build()
+    }
 }
