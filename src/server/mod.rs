@@ -16,7 +16,7 @@ pub struct AppState {
 
 /// WessServer is a struct that encapsulates the Tide server instance.
 pub struct WessServer {
-    app: Server<()>,
+    app: Server<AppState>,
 }
 
 impl WessServer {
@@ -25,6 +25,9 @@ impl WessServer {
     /// # Arguments
     ///
     /// * `tx` - A Sender<WasmJob> instance to be used for the server's state.
+    #[allow(clippy::new_without_default)]
+    pub fn new(tx: Sender<WasmJob>) -> WessServer {
+        let mut app = tide::with_state(AppState { tx });
 
         app.at("/:id").get(|req| async { get_wasm(req) });
         app.at("/")
