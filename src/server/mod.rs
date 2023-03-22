@@ -8,6 +8,11 @@ mod routes;
 
 use self::routes::{add_new_wasm, get_wasm, remove_wasm, update_wasm};
 use tide::Server;
+/// AppState represents the shared state of the application, including the Sender<WasmJob> instance.
+#[derive(Clone)]
+pub struct AppState {
+    pub tx: Sender<WasmJob>,
+}
 
 /// WessServer is a struct that encapsulates the Tide server instance.
 pub struct WessServer {
