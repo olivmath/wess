@@ -1,8 +1,15 @@
 use tide::{Error, Request, Response, StatusCode};
 
+pub async fn get_wasm(req: Request<AppState>) -> Result<Response, Error> {
+    let rocksdb = RocksDB::new();
 
-pub fn get_wasm(_req: Request<()>) -> Result<Response, Error> {
-    Ok(Response::builder(StatusCode::Ok).body("get wasm").build())
+    if let Some(wasm) = rocksdb.get(req.param("id").unwrap()) {
+        Ok(wasm.into())
+    } else {
+        Ok(Response::builder(StatusCode::NotFound)
+            .body("Invalid ID")
+            .build())
+    }
 }
 
 async fn send_to_runner(wasm_job: WasmJob, tx: Sender<WasmJob>) -> Result<Response, Error> {
