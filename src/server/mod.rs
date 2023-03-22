@@ -6,8 +6,13 @@
 pub mod request;
 mod routes;
 
-use self::routes::{add_new_wasm, get_wasm, remove_wasm, update_wasm};
+use self::{
+    request::{JobType, WasmJob},
+    routes::{get_wasm, job_maker},
+};
 use tide::Server;
+use tokio::sync::mpsc::Sender;
+
 /// AppState represents the shared state of the application, including the Sender<WasmJob> instance.
 #[derive(Clone)]
 pub struct AppState {
