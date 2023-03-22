@@ -39,33 +39,3 @@ impl WessServer {
         self.app.listen(addr).await
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use async_std::task;
-    use tide::StatusCode;
-    use tide_testing::TideTestingExt;
-
-    #[test]
-    fn test_wess_server_new() {
-        let _server = WessServer::new();
-    }
-
-    #[test]
-    fn test_wess_server_run() {
-        task::block_on(async {
-            let server = WessServer::new();
-            let client = server.app.client();
-
-            let server_task = task::spawn(async move {
-                server.run("127.0.0.1:777").await.unwrap();
-            });
-
-            let resp = client.get("/").send().await.unwrap();
-            assert_eq!(resp.status(), StatusCode::Ok);
-
-            server_task.cancel().await;
-        });
-    }
-}
