@@ -14,13 +14,11 @@ pub struct WessServer {
 }
 
 impl WessServer {
-    /// Constructs a new WessServer with the provided RocksDB instance.
+    /// Constructs a new WessServer with the provided Sender<WasmJob> instance.
     ///
     /// # Arguments
     ///
-    /// * `db` - A RocksDB instance to be used for the server's state.
-    pub fn new() -> WessServer {
-        let mut app = tide::new();
+    /// * `tx` - A Sender<WasmJob> instance to be used for the server's state.
 
         app.at("/:id").get(|req| async { get_wasm(req) });
         app.at("/")
@@ -34,7 +32,6 @@ impl WessServer {
     /// Starts the HTTP server and listens for incoming connections.
     ///
     /// This version of WessServer supports the following routes:
-    /// * `GET "/"`: Responds with a status code of 200 (OK) with a list of all Wasms saved.
     pub async fn run(self, addr: &str) -> std::io::Result<()> {
         self.app.listen(addr).await
     }
