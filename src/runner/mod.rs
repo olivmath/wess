@@ -4,16 +4,28 @@ use self::job::Job;
 use crate::{database::RocksDB, wasm::JobType};
 use tokio::sync::mpsc::Receiver;
 
+/// A structure representing a runner for jobs.
 pub struct Runner {
     rx: Receiver<Job>,
     db: RocksDB,
 }
 
 impl Runner {
+    /// Creates a new `Runner` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `rx` - A [`Receiver`] of [`Job`] instances.
+    /// * `db` - A [`RocksDB`] instance.
+    ///
+    /// # Returns
+    ///
+    /// A new `Runner` instance.
     pub fn new(rx: Receiver<Job>, db: RocksDB) -> Self {
         Runner { rx, db }
     }
 
+    /// Starts running jobs received from the channel.
     pub async fn run(&mut self) {
         while let Some(job) = self.rx.recv().await {
             let wasm_job = job.wasm_job;
