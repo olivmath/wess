@@ -22,10 +22,23 @@ pub async fn get_wasm(req: Request<AppState>) -> Result<Response, Error> {
 }
 
 async fn send_to_runner(wasm_job: WasmJob, tx: Sender<Job>) -> Result<Response, Error> {
+    let (done_tx, done_rx) = oneshot::channel::<String>();
 
-    Ok(Response::builder(StatusCode::Created)
-        .body(json!({ "id": wasm_job.id }))
-        .build())
+    tx.send(Job {
+        wasm_job: wasm_job.clone(),
+        responder: done_tx,
+    })
+    .await
+    .unwrap();
+
+    match done_rx.await {
+        Ok(response) => Ok(Response::builder(StatusCode::Created)
+            .body(json!({ "message": response }))
+            .build()),
+        Err(e) => Ok(Response::builder(StatusCode::InternalServerError)
+            .body(json!({ "message": e.to_string() }))
+            .build()),
+    }
 }
 
 pub async fn job_maker(mut req: Request<AppState>, job_type: JobType) -> Result<Response, Error> {
