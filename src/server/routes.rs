@@ -16,7 +16,7 @@ pub async fn get_wasm(req: Request<AppState>) -> Result<Response, Error> {
         Ok(wasm.into())
     } else {
         Ok(Response::builder(StatusCode::NotFound)
-            .body("Invalid ID")
+            .body("Id Not Found")
             .build())
     }
 }
