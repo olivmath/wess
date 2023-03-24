@@ -43,10 +43,19 @@ async fn send_to_runner(wasm_job: WasmJob, tx: Sender<Job>) -> Result<Response, 
 
 pub async fn job_maker(mut req: Request<AppState>, job_type: JobType) -> Result<Response, Error> {
     if let Ok(wasm_req) = req.body_json::<WasmRequest>().await {
+        let random_id = {
+            let mut rng = rand::thread_rng();
+            let random_number: u8 = rng.gen_range(0..100);
+            digest(
+                [wasm_req.wasm.as_slice(), &[random_number, random_number]]
+                    .concat()
+                    .as_slice(),
+            )
+        };
         send_to_runner(
             WasmJob {
                 job_type,
-                id: "0x22ff".to_string(), // TODO hash the .wasm with SHA256
+                id: req.param("id").unwrap_or(&random_id).to_string(),
                 wasm_req,
             },
             req.state().tx.clone(),
