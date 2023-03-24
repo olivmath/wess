@@ -14,7 +14,7 @@ use tokio::sync::mpsc::Sender;
 /// AppState represents the shared state of the application, including the Sender<WasmJob> instance.
 #[derive(Clone)]
 pub struct AppState {
-    pub tx: Sender<WasmJob>,
+    pub tx: Sender<Job>,
 }
 
 /// WessServer is a struct that encapsulates the Tide server instance.
@@ -29,7 +29,7 @@ impl WessServer {
     ///
     /// * `tx` - A Sender<WasmJob> instance to be used for the server's state.
     #[allow(clippy::new_without_default)]
-    pub fn new(tx: Sender<WasmJob>) -> WessServer {
+    pub fn new(tx: Sender<Job>) -> WessServer {
         let mut app = tide::with_state(AppState { tx });
         app.at("/:id").get(|req| async { get_wasm(req).await });
 

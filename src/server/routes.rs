@@ -20,8 +20,7 @@ pub async fn get_wasm(req: Request<AppState>) -> Result<Response, Error> {
     }
 }
 
-async fn send_to_runner(wasm_job: WasmJob, tx: Sender<WasmJob>) -> Result<Response, Error> {
-    tx.send(wasm_job.clone()).await.unwrap();
+async fn send_to_runner(wasm_job: WasmJob, tx: Sender<Job>) -> Result<Response, Error> {
 
     Ok(Response::builder(StatusCode::Created)
         .body(json!({ "id": wasm_job.id }))
