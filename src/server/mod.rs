@@ -31,12 +31,13 @@ impl WessServer {
     #[allow(clippy::new_without_default)]
     pub fn new(tx: Sender<Job>) -> WessServer {
         let mut app = tide::with_state(AppState { tx });
-        app.at("/:id").get(|req| async { get_wasm(req).await });
-
-        app.at("/")
-            .post(|req| async { job_maker(req, JobType::Save).await })
+        app.at("/:id")
+            .get(|req| async { get_wasm(req).await })
             .put(|req| async { job_maker(req, JobType::Modity).await })
             .delete(|req| async { job_maker(req, JobType::Delete).await });
+
+        app.at("/")
+            .post(|req| async { job_maker(req, JobType::Save).await });
 
         WessServer { app }
     }
