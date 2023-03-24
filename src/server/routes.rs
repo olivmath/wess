@@ -1,11 +1,12 @@
+use rand::Rng;
 use serde_json::json;
+use sha256::digest;
 use tide::{Error, Request, Response, StatusCode};
-use tokio::sync::mpsc::Sender;
+use tokio::sync::{mpsc::Sender, oneshot};
 
-use super::{
-    super::database::RocksDB,
-    request::{JobType, WasmJob, WasmRequest},
-    AppState,
+use crate::{
+    runner::job::Job,
+    wasm::{JobType, WasmJob},
 };
 
 pub async fn get_wasm(req: Request<AppState>) -> Result<Response, Error> {
