@@ -1,13 +1,13 @@
+use super::{super::database::RocksDB, request::WasmRequest, AppState};
+use crate::{
+    runner::job::Job,
+    wasm::{JobType, WasmJob},
+};
 use rand::Rng;
 use serde_json::json;
 use sha256::digest;
 use tide::{Error, Request, Response, StatusCode};
 use tokio::sync::{mpsc::Sender, oneshot};
-
-use crate::{
-    runner::job::Job,
-    wasm::{JobType, WasmJob},
-};
 
 pub async fn get_wasm(req: Request<AppState>) -> Result<Response, Error> {
     let rocksdb = RocksDB::new();
