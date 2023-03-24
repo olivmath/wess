@@ -2,9 +2,12 @@
 
 #![allow(dead_code)]
 
+mod errors;
+
 use super::wasm::Wasm;
+use errors::RocksDBError;
 use lazy_static::lazy_static;
-use rocksdb::{DBWithThreadMode, Error, IteratorMode, MultiThreaded, Options, DB as DataBase};
+use rocksdb::{DBWithThreadMode, IteratorMode, MultiThreaded, Options, DB as DataBase};
 use std::sync::{Arc, Mutex};
 
 // Creating the single instance of RocksDB with inter-thread security.
