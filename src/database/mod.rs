@@ -72,15 +72,22 @@ impl RocksDB {
     ///
     /// # Arguments
     ///
-    /// * `key` - A string slice that represents the key of the `Wasm` instance.
-    /// * `wasm` - A `Wasm` instance to be stored in the database.
-    ///
-    /// # Returns
-    ///
-    /// A `Result` indicating success or failure of the operation.
-    pub fn put(&mut self, key: &str, wasm: Wasm) -> Result<(), Error> {
-        let value = serde_json::to_vec(&wasm).unwrap();
-        self.db.lock().unwrap().put(key.as_bytes(), value)
+    pub fn put(&mut self, key: &str, wasm: Wasm) -> Result<String, RocksDBError> {
+        let x = self
+            .db
+            .lock()
+            .unwrap()
+            .get(key)
+            .map_err(|_| RocksDBError::Unknown);
+        x.and_then(|_| {
+            let value = serde_json::to_vec(&wasm).unwrap();
+            self.db
+                .lock()
+                .unwrap()
+                .put(key.as_bytes(), value)
+                .map_err(|_| RocksDBError::Unknown)?;
+            Ok(key.to_owned())
+        })
     }
 
     /// Retrieves a `Wasm` instance from the database by its key.
@@ -103,13 +110,23 @@ impl RocksDB {
     ///
     /// # Arguments
     ///
-    /// * `key` - A string slice that represents the key of the `Wasm` instance.
-    ///
-    /// # Returns
-    ///
-    /// A `Result` indicating success or failure of the operation.
-    pub fn del(&mut self, key: &str) -> Result<(), Error> {
-        self.db.lock().unwrap().delete(key.as_bytes())
+    pub fn del(&mut self, key: &str) -> Result<String, RocksDBError> {
+        let value = self
+            .db
+            .lock()
+            .unwrap()
+            .get(key)
+            .map_err(|_| RocksDBError::Unknown)?;
+        if let Some(_) = value {
+            self.db
+                .lock()
+                .unwrap()
+                .delete(key)
+                .map_err(|_| RocksDBError::Unknown)?;
+            Ok(key.to_owned())
+        } else {
+            Err(RocksDBError::NotFound)
+        }
     }
 
     /// Retrieves all `Wasm` instances from the database.
