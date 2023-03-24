@@ -12,11 +12,11 @@ pub struct WasmFnArgs {
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct WasmMetadata {
-    pub owner: Vec<u8>,
-    pub signature: Vec<u8>,
-    pub id: u32,
+    // pub owner: Vec<u8>,
+    // pub signature: Vec<u8>,
+    pub id: String,
     pub fn_main: String,
-    pub args: Vec<WasmFnArgs>,
+    pub args: Vec<Option<WasmFnArgs>>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
