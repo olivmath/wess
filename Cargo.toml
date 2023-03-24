@@ -5,16 +5,18 @@ authors = ["Lucas Oliveira olivmath@protonmail.com"]
 edition = "2018"
 
 [dependencies]
+rocksdb = { version = "0.20.1", features = ["multi-threaded-cf"] }
 async-std = { version = "1.12.0", features = ["attributes"] }
 serde = { version = "1.0.153", features = ["derive"] }
 tokio = { version = "1.26.0", features = ["full"] }
+tide-testing = "0.1.0"
 serde_json = "1.0.94"
-term_size = "0.3.2"
-textwrap = "0.16.0"
-rocksdb = { version = "0.20.1", features = ["multi-threaded-cf"] }
 lazy_static = "1.4.0"
 # wasmtime = "6.0.1"
+term_size = "0.3.2"
+textwrap = "0.16.0"
 colored = "2.0.0"
-tide = "0.16.0"
 # quinn = "0.9.3"
-tide-testing = "0.1.0"
+sha256 = "1.1.2"
+tide = "0.16.0"
+rand = "0.8.5"
