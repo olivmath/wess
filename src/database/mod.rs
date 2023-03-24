@@ -68,10 +68,15 @@ impl RocksDB {
         }
     }
 
-    /// Puts a `Wasm` instance into the database under the given key.
+    /// Adds a new Wasm module to the database with the given key. If a Wasm module
+    /// with the same key already exists in the database, it will be overwritten.
+    /// Returns an `Err` with an `RocksDBError` if there was an issue adding the Wasm module
+    /// to the database.
     ///
     /// # Arguments
     ///
+    /// * `key` - A `&str` representing the key of the Wasm module.
+    /// * `wasm` - A `Wasm` representing the Wasm module.
     pub fn put(&mut self, key: &str, wasm: Wasm) -> Result<String, RocksDBError> {
         let x = self
             .db
@@ -90,15 +95,12 @@ impl RocksDB {
         })
     }
 
-    /// Retrieves a `Wasm` instance from the database by its key.
+    /// Returns a `Wasm` module with the given key from the database. Returns `None`
+    /// if there is no Wasm module with the given key in the database.
     ///
     /// # Arguments
     ///
-    /// * `key` - A string slice that represents the key of the `Wasm` instance.
-    ///
-    /// # Returns
-    ///
-    /// An `Option` that wraps the `Wasm` instance if it is found in the database.
+    /// * `key` - A `&str` representing the key of the Wasm module.
     pub fn get(&self, key: &str) -> Option<Wasm> {
         match self.db.lock().unwrap().get(key.as_bytes()).unwrap() {
             Some(v) => serde_json::from_slice(&v).unwrap(),
@@ -106,10 +108,14 @@ impl RocksDB {
         }
     }
 
-    /// Deletes a `Wasm` instance from the database by its key.
+    /// Deletes the `Wasm` module with the given key from the database. Returns an `Err`
+    /// with an `RocksDBError` if there was an issue deleting the Wasm module from the database.
+    /// Returns an `Err` with a `NotFound` error kind if there is no Wasm module with the
+    /// given key in the database.
     ///
     /// # Arguments
     ///
+    /// * `key` - A `&str` representing the key of the Wasm module.
     pub fn del(&mut self, key: &str) -> Result<String, RocksDBError> {
         let value = self
             .db
