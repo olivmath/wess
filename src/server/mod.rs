@@ -6,10 +6,8 @@
 pub mod request;
 mod routes;
 
-use self::{
-    request::{JobType, WasmJob},
-    routes::{get_wasm, job_maker},
-};
+use self::routes::{get_wasm, job_maker};
+use crate::{runner::job::Job, wasm::JobType};
 use tide::Server;
 use tokio::sync::mpsc::Sender;
 
