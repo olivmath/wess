@@ -1,4 +1,4 @@
-use super::super::wasm::WasmFnArgs;
+use crate::wasm::WasmFnArgs;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone)]

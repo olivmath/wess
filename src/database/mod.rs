@@ -4,7 +4,7 @@
 
 mod errors;
 
-use super::wasm::Wasm;
+use crate::wasm::Wasm;
 use errors::RocksDBError;
 use lazy_static::lazy_static;
 use rocksdb::{DBWithThreadMode, IteratorMode, MultiThreaded, Options, DB as DataBase};

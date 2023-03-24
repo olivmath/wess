@@ -1,4 +1,5 @@
-use super::{super::database::RocksDB, request::WasmRequest, AppState};
+use crate::server::AppState;
+use crate::{database::RocksDB, server::request::WasmRequest};
 use crate::{
     runner::job::Job,
     wasm::{JobType, WasmJob},

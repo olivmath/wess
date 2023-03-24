@@ -1,3 +1,5 @@
+use crate::server::request::WasmRequest;
+use serde;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tide::Response;
