@@ -18,6 +18,7 @@ pub struct AppState {
 }
 
 /// WessServer is a struct that encapsulates the Tide server instance.
+#[derive(Clone)]
 pub struct WessServer {
     app: Server<AppState>,
 }
