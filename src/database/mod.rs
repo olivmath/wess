@@ -1,4 +1,4 @@
-//! The `database` module provides a simple API for interacting with a RocksDB database.
+//! # The `database` module provides a simple API for interacting with a RocksDB database.
 //!
 //! This module contains the following main components:
 //!

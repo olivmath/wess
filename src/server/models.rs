@@ -1,6 +1,6 @@
-//! # The models module provides types and functions for handling incoming HTTP requests to the Wess application.
+//! # This `models` module provides types for `server` module
 //!
-//! This module contains the following main components:
+//! This module contains the following types:
 //!
 //! - [`FnTypeArgRequest`]: A struct that represents the type of an argument in a WebAssembly function request.
 //! - [`WasmRequest`]: A struct representing a request to execute a WebAssembly function.
@@ -8,6 +8,13 @@
 //! - [`RequestError`]: An enumeration of potential errors that can occur when parsing a request.
 //! - [`FnArg`]: A struct representing an argument for a WebAssembly function.
 //! - [`RunRequest`]: A struct representing a request to run a WebAssembly function.
+//!
+//! The `models` module depends on the following modules:
+//!
+//! - [`FnTypeArg`]: Represents an argument for a WebAssembly function.
+//! - [`Wasm`]: Represents WebAssembly bytecode.
+//! - [`WasmFn`]: Represents a WebAssembly function.
+//! - [`WasmMetadata`]: Represents metadata associated with a WebAssembly function.
 
 use crate::database::models::{FnTypeArg, Wasm, WasmFn, WasmMetadata};
 use serde;
@@ -40,7 +47,7 @@ pub struct WasmRequest {
     pub func: String,
 }
 
-/// Represents a write request type.
+/// # Represents a write request type.
 #[derive(Deserialize, Clone)]
 pub struct WRequest(pub Option<WasmRequest>);
 

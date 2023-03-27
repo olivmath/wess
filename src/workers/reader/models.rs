@@ -1,3 +1,15 @@
+//! # This `models` module provides types for `reader` module
+//!
+//! This module contains the following types:
+//!
+//! - [`RJob`]: A struct representing a read job, containing a channel to send the read response and the ID of the wasm function to be read.
+//! - [`ReadResponse`]: An enum representing the response of a read operation. It can either contain the retrieved wasm function, or a message indicating that the function was not found.
+//! 
+//! The `models` module depends on the following modules:
+//!
+//! - [`WasmFn`]: Represents a WebAssembly function.
+
+
 use crate::database::models::WasmFn;
 use serde::Serialize;
 use tokio::sync::oneshot::Sender;
