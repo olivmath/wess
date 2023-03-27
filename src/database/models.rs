@@ -1,6 +1,17 @@
+//! # This `models` module provides types for `server` module
+//!
+//! This module contains the following types:
+//!
+//! - [`Wasm`]: A type alias for a Vec<u8> representing WebAssembly bytecode.
+//! - [`FnTypeArg`]: A struct representing an argument for a WebAssembly function, containing a name and a type.
+//! - [`WasmMetadata`]: A struct representing metadata associated with a WebAssembly function, containing its name, return type and a vector of function argument types.
+//! - [`WasmFn`]: A struct representing a WebAssembly function, containing its bytecode and metadata.
+//!
+//! All types are serializable and deserializable through serde.
+
 use serde::{Deserialize, Serialize};
 
-/// Represents WebAssembly bytecode.
+/// # Represents WebAssembly bytecode.
 pub type Wasm = Vec<u8>;
 
 /// # Represents an argument for a WebAssembly function.
