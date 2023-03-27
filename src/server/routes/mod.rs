@@ -81,7 +81,6 @@ async fn create_wasm_request(
     }
 }
 
-
 /// # Handler function for write operations.
 ///
 /// ## Arguments
