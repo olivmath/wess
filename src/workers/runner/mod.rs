@@ -1,5 +1,4 @@
 pub mod models;
-mod wasm;
 
 use self::models::{RunJob, RunResponse, RunnerError};
 use crate::{
