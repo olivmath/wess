@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 /// Represents WebAssembly bytecode.
 pub type Wasm = Vec<u8>;
 
-/// Represents an argument for a WebAssembly function.
+/// # Represents an argument for a WebAssembly function.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct FnTypeArg {
     /// The name of the argument.
@@ -28,7 +28,7 @@ impl FnTypeArg {
     }
 }
 
-/// Represents metadata associated with a WebAssembly function.
+/// # Represents metadata associated with a WebAssembly function.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct WasmMetadata {
     // pub owner: Vec<u8>,
@@ -62,7 +62,7 @@ impl WasmMetadata {
     }
 }
 
-/// Represents a WebAssembly function.
+/// # Represents a WebAssembly function.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct WasmFn {
     /// The WebAssembly bytecode.

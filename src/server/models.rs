@@ -44,7 +44,7 @@ pub struct WasmRequest {
 #[derive(Deserialize, Clone)]
 pub struct WRequest(pub Option<WasmRequest>);
 
-/// Represents an error that can occur when parsing a request.
+/// # Represents an error that can occur when parsing a request.
 #[derive(Debug)]
 pub enum RequestError {
     /// Indicates that the JSON in the request is invalid.
@@ -77,7 +77,7 @@ impl WRequest {
     }
 }
 
-/// Represents an argument for a WebAssembly function.
+/// # Represents an argument for a WebAssembly function.
 #[derive(Deserialize, Debug)]
 pub struct FnArg {
     /// The value of the argument.
@@ -86,7 +86,7 @@ pub struct FnArg {
     pub name: String,
 }
 
-/// Represents a request to run a WebAssembly function.
+/// # Represents a request to run a WebAssembly function.
 #[derive(Deserialize, Debug)]
 pub struct RunRequest {
     /// The arguments for the WebAssembly function.
