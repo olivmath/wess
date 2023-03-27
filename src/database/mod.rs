@@ -2,9 +2,9 @@
 //!
 //! This module contains the following main components:
 //!
-//! - `RocksDB`: A struct that provides a simple API for interacting with a RocksDB database.
-//! - `WasmFn`: A struct representing a WebAssembly function.
-//! - `RocksDBError`: An enumeration of potential errors that can be encountered while working with a RocksDB database.
+//! - [`RocksDB`]: A struct that provides a simple API for interacting with a RocksDB database.
+//! - [`WasmFn`]: A struct representing a WebAssembly function.
+//! - [`RocksDBError`]: An enumeration of potential errors that can be encountered while working with a RocksDB database.
 //!
 //! # Examples
 //!
