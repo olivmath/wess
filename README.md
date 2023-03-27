@@ -1,0 +1,1 @@
+# Wess is a stateless `.wasm` serverless manager and executor
