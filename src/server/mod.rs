@@ -8,9 +8,9 @@
 //! The `server` module depends on the following modules:
 //!
 //! - [`routes`]: A module that contains the logic for handling HTTP routes.
-//! - [`request`]: A module that contains the structs for wrap json requests.
+//! - [`models`]: A module that contains the models for wrap json requests.
 
-pub mod request;
+pub mod models;
 mod routes;
 
 use self::routes::{read_op, run_op, write_op};
