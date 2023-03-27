@@ -1,19 +1,15 @@
 mod database;
 mod logger;
-mod runner;
 mod server;
-mod wasm;
+mod workers;
 
-use crate::runner::Runner;
+
 use database::RocksDB;
 use logger::{clear_terminal_with, stdout_log};
-use runner::job::Job;
 use server::WessServer;
+use workers::{writer::Writer, reader::Reader, runner::Runner};
 use std::{error::Error, sync::Arc};
-use tokio::{
-    sync::{mpsc, Mutex},
-    try_join,
-};
+use tokio::{sync::Mutex, try_join};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -21,24 +17,38 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     stdout_log("💽 Start RocksDB data base").await?;
     let db = RocksDB::new();
+    
+    
+    stdout_log("🏗️ Create a threadset to run the tasks in the background").await?;
 
-    stdout_log("🚿 Create channels for HTTP requests").await?;
-    let (tx, rx) = mpsc::channel::<Job>(100);
-
-    stdout_log("👷 Create a threadset to run the tasks in the background").await?;
-    let runner = Arc::new(Mutex::new(Runner::new(rx, db)));
-
-    stdout_log("🛰️  Run server on `http://127.0.0.1:3000`").await?;
-    let wess = Arc::new(Mutex::new(WessServer::new(tx)));
-
-    stdout_log("📡 Send the received tasks to the runners' tasks channel").await?;
-
+    stdout_log("👨🏻‍🏭 Start Writer executor").await?;
+    let (writer_tx, writer) = Writer::new(db.clone());
+    let writer_task = {
+        let writer = Arc::clone(&writer);
+        tokio::spawn(async move {
+            writer.lock().await.run().await;
+        })
+    };
+    
+    stdout_log("👨🏼‍🔧 Start Reader executor").await?;
+    let (reader_tx, reader) = Reader::new(db.clone());
+    let reader_task = {
+        let reader = Arc::clone(&reader);
+        tokio::spawn(async move {
+            reader.lock().await.run().await;
+        })
+    };
+    stdout_log("👩🏾‍🔬 Start Runner executor").await?;
+    let (runner_tx, runner) = Runner::new(db);
     let runner_task = {
         let runner = Arc::clone(&runner);
         tokio::spawn(async move {
             runner.lock().await.run().await;
         })
     };
+
+    stdout_log("🛰️  Run server on `http://127.0.0.1:3000`").await?;
+    let wess = Arc::new(Mutex::new(WessServer::new(writer_tx, reader_tx, runner_tx)));
 
     let server_task = {
         let wess = Arc::clone(&wess);
@@ -48,6 +58,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
     };
 
-    try_join!(server_task, runner_task)?;
+    try_join!(server_task, runner_task, writer_task, reader_task)?;
     Ok(())
 }
