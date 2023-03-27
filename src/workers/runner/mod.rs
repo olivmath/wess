@@ -4,7 +4,7 @@ mod wasm;
 use self::models::{RunJob, RunResponse, RunnerError};
 use crate::{
     database::{models::WasmFn, RocksDB},
-    server::request::RunRequest,
+    server::models::RunRequest,
 };
 use std::sync::Arc;
 use tokio::sync::{
