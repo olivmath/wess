@@ -31,7 +31,7 @@ use self::utils::{
     get_random_id, respond_with_error, send_to_reader, send_to_runner, send_to_writer,
 };
 use super::{
-    request::{RunRequest, WRequest, WasmRequest},
+    models::{RunRequest, WRequest, WasmRequest},
     AppState,
 };
 use crate::workers::writer::models::WOps;

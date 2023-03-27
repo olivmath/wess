@@ -1,7 +1,7 @@
 use crate::{
     logger::log_err,
     server::{
-        request::{RunRequest, WRequest},
+        models::{RunRequest, WRequest},
         AppState,
     },
     workers::{
