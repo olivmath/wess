@@ -1,10 +1,33 @@
 //! The `database` module provides a simple API for interacting with a RocksDB database.
+//!
+//! This module contains the following main components:
+//!
+//! - `RocksDB`: A struct that provides a simple API for interacting with a RocksDB database.
+//! - `WasmFn`: A struct representing a WebAssembly function.
+//! - `RocksDBError`: An enumeration of potential errors that can be encountered while working with a RocksDB database.
+//!
+//! # Examples
+//!
+//! ```no_run
+//! use database::RocksDB;
+//! use database::models::WasmFn;
+//!
+//! let mut db = RocksDB::new();
+//! let wasm = WasmFn::new("example_fn", "example.wasm");
+//!
+//! let key = "example_key";
+//! let _ = db.add(key, wasm).unwrap();
+//! let wasm_fn = db.get(key).unwrap();
+//! println!("{:?}", wasm_fn);
+//! let _ = db.del(key).unwrap();
+//! ```
 
 #![allow(dead_code)]
 
 mod errors;
+pub mod models;
 
-use crate::wasm::Wasm;
+use self::models::WasmFn;
 use errors::RocksDBError;
 use lazy_static::lazy_static;
 use rocksdb::{DBWithThreadMode, IteratorMode, MultiThreaded, Options, DB as DataBase};
@@ -35,14 +58,15 @@ lazy_static! {
 }
 
 /// The `RocksDB` framework provides a simple API for interacting with the RocksDB database.
+#[derive(Clone, Debug)]
 pub struct RocksDB {
     db: Arc<Mutex<DBWithThreadMode<MultiThreaded>>>,
 }
 
 impl RocksDB {
-    /// Creates a new instance of the `RocksDB` structure.
+    /// # Creates a new instance of the `RocksDB` structure.
     ///
-    /// # Returns
+    /// ## Returns
     ///
     /// * An instance of `RocksDB`.
     pub fn new() -> Self {
@@ -53,95 +77,77 @@ impl RocksDB {
 
     /// # [`TEST ONLY`]
     ///
-    /// Creates a new instance of the `RocksDB` structure, which is used to interact with a temporary RocksDB database, used only for testing purposes.
+    /// # Creates a new instance of the `RocksDB` structure
+    /// which is used to interact with a temporary RocksDB database,
+    /// used only for testing purposes.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
     /// This function does not take any arguments.
     ///
-    /// # Returns
+    /// ## Returns
     ///
-    /// * An instance of `RocksDB` - a structure that provides a simple API for interacting with a temporary RocksDB database used for testing purposes.
+    /// * An instance of `RocksDB` - a structure that provides a simple API
+    /// for interacting with a temporary RocksDB database used for testing purposes.
     pub fn dev() -> Self {
         RocksDB {
             db: Arc::clone(&DEV_DB),
         }
     }
 
-    /// Adds a new Wasm module to the database with the given key. If a Wasm module
-    /// with the same key already exists in the database, it will be overwritten.
-    /// Returns an `Err` with an `RocksDBError` if there was an issue adding the Wasm module
-    /// to the database.
+    /// # Adds a new key-value pair to the RocksDB database.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
-    /// * `key` - A `&str` representing the key of the Wasm module.
-    /// * `wasm` - A `Wasm` representing the Wasm module.
-    pub fn put(&mut self, key: &str, wasm: Wasm) -> Result<String, RocksDBError> {
-        let x = self
-            .db
+    /// * `key` - A string slice that represents the key to be added.
+    /// * `wasm` - A `WasmFn` object that represents the value to be added.
+    ///
+    /// ## Returns
+    ///
+    /// * A `Result` object that returns the key if the operation was successful,
+    /// or a `RocksDBError` object if the operation failed.
+    pub fn add(&mut self, key: &str, wasm: WasmFn) -> Result<String, RocksDBError> {
+        self.db
             .lock()
             .unwrap()
-            .get(key)
-            .map_err(|_| RocksDBError::Unknown);
-        x.and_then(|_| {
-            let value = serde_json::to_vec(&wasm).unwrap();
-            self.db
-                .lock()
-                .unwrap()
-                .put(key.as_bytes(), value)
-                .map_err(|_| RocksDBError::Unknown)?;
-            Ok(key.to_owned())
-        })
+            .put(key, serde_json::to_vec(&wasm).unwrap())
+            .map_err(|e| RocksDBError::Unknown(e.to_string()))
+            .and_then(|_| Ok(key.to_string()))
     }
 
-    /// Returns a `Wasm` module with the given key from the database. Returns `None`
-    /// if there is no Wasm module with the given key in the database.
+    /// # Gets the value of a key in the RocksDB database.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
-    /// * `key` - A `&str` representing the key of the Wasm module.
-    pub fn get(&self, key: &str) -> Option<Wasm> {
-        match self.db.lock().unwrap().get(key.as_bytes()).unwrap() {
-            Some(v) => serde_json::from_slice(&v).unwrap(),
-            None => None,
-        }
-    }
-
-    /// Deletes the `Wasm` module with the given key from the database. Returns an `Err`
-    /// with an `RocksDBError` if there was an issue deleting the Wasm module from the database.
-    /// Returns an `Err` with a `NotFound` error kind if there is no Wasm module with the
-    /// given key in the database.
+    /// * `key` - A string slice that represents the key to be retrieved.
     ///
-    /// # Arguments
+    /// ## Returns
     ///
-    /// * `key` - A `&str` representing the key of the Wasm module.
-    pub fn del(&mut self, key: &str) -> Result<String, RocksDBError> {
+    /// * An `Option` that returns the value of the key if it exists in the database,
+    /// or `None` if it doesn't.
+    pub fn get(&self, key: &str) -> Option<WasmFn> {
         let value = self
             .db
             .lock()
             .unwrap()
             .get(key)
-            .map_err(|_| RocksDBError::Unknown)?;
-        if let Some(_) = value {
-            self.db
-                .lock()
-                .unwrap()
-                .delete(key)
-                .map_err(|_| RocksDBError::Unknown)?;
-            Ok(key.to_owned())
-        } else {
-            Err(RocksDBError::NotFound)
+            .map_err(|e| RocksDBError::Unknown(e.to_string()))
+            .unwrap_or_default();
+
+        match value {
+            Some(v) => Some(serde_json::from_slice::<WasmFn>(&v).unwrap()),
+            None => None,
         }
     }
 
-    /// Retrieves all `Wasm` instances from the database.
+    /// # Gets all key-value pairs from the RocksDB database.
     ///
-    /// # Returns
+    /// ## Returns
     ///
-    /// A `Vec` that contains `Option<Wasm>` elements. Each element is either `Some(Wasm)`
-    /// if a `Wasm` instance was found in the database, or `None` if an error occurred.
-    pub fn get_all(&self) -> Vec<Option<Wasm>> {
+    /// * A `Vec` that contains all the key-value pairs in the database.
+    /// Each element of the vector is an `Option` that returns the value if the key exists,
+    /// or `None` if the key doesn't exist.
+    pub fn all(&self) -> Vec<Option<WasmFn>> {
         self.db
             .lock()
             .unwrap()
@@ -152,78 +158,110 @@ impl RocksDB {
             })
             .collect()
     }
+
+    /// # Updates the value of an existing key in the RocksDB database.
+    ///
+    /// ## Arguments
+    ///
+    /// * `key` - A string slice that represents the key to be updated.
+    /// * `wasm` - A `WasmFn` object that represents the new value to be set.
+    ///
+    /// ## Returns
+    ///
+    /// * A `Result` object that returns the key if the operation was successful,
+    /// or a `RocksDBError` object if the operation failed.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `RocksDBError::NotFound` error if the key doesn't exist in the database.
+    pub fn upd(&mut self, key: &str, wasm: WasmFn) -> Result<String, RocksDBError> {
+        let value = self
+            .db
+            .lock()
+            .unwrap()
+            .get(key)
+            .map_err(|e| RocksDBError::Unknown(e.to_string()))
+            .unwrap_or_default();
+        if let Some(_) = value {
+            let new_value = serde_json::to_vec(&wasm).unwrap();
+            self.db
+                .lock()
+                .unwrap()
+                .put(key.as_bytes(), new_value)
+                .map_err(|e| RocksDBError::Unknown(e.to_string()))?;
+            Ok(key.to_owned())
+        } else {
+            Err(RocksDBError::NotFound)
+        }
+    }
+
+    /// # Deletes a key from the RocksDB database.
+    ///
+    /// ## Arguments
+    ///
+    /// * `key` - A string slice that represents the key to be deleted.
+    ///
+    /// ## Returns
+    ///
+    /// * A `Result` object that returns the key if the operation was successful,
+    /// or a `RocksDBError` object if the operation failed.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `RocksDBError::NotFound` error if the key doesn't exist in the database.
+    pub fn del(&mut self, key: &str) -> Result<String, RocksDBError> {
+        let value = self
+            .db
+            .lock()
+            .unwrap()
+            .get(key)
+            .map_err(|e| RocksDBError::Unknown(e.to_string()))?;
+        if let Some(_) = value {
+            self.db
+                .lock()
+                .unwrap()
+                .delete(key)
+                .map_err(|e| RocksDBError::Unknown(e.to_string()))?;
+            Ok(key.to_owned())
+        } else {
+            Err(RocksDBError::NotFound)
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::wasm::{Wasm, WasmFnArgs, WasmMetadata};
+    use models::WasmFn;
 
-    fn wasm_mocked() -> Wasm {
-        Wasm {
-            wasm: vec![1, 2, 3],
-            metadata: WasmMetadata {
-                owner: vec![4, 5, 6],
-                signature: vec![7, 8, 9],
-                id: 123,
-                fn_main: "main".to_string(),
-                args: vec![
-                    WasmFnArgs {
-                        value: serde_json::from_str("{}").unwrap(),
-                        name: "arg1".to_string(),
-                        arg_type: "type1".to_string(),
-                    },
-                    WasmFnArgs {
-                        value: serde_json::from_str("{}").unwrap(),
-                        name: "arg2".to_string(),
-                        arg_type: "type2".to_string(),
-                    },
-                ],
-            },
-        }
+    #[test]
+    fn test_add_and_get() {
+        let mut db = RocksDB::dev();
+        let wasm = WasmFn::default();
+        let key = "example_key";
+
+        let _ = db.add(key, wasm.clone()).unwrap();
+        let wasm_fn = db.get(key).unwrap();
+
+        assert_eq!(wasm_fn, wasm);
     }
 
     #[test]
-    fn test_put_and_get_data() {
-        let data = wasm_mocked();
-        let mut rocksdb = RocksDB::dev();
+    fn test_upd_and_del() {
+        let mut db = RocksDB::dev();
+        let wasm = WasmFn::default();
+        let wasm_updated = WasmFn::default();
+        let key = "example_key";
 
-        rocksdb.put("key01", data.clone()).unwrap();
+        let _ = db.add(key, wasm).unwrap();
+        let _ = db.upd(key, wasm_updated.clone()).unwrap();
+        let wasm_fn = db.get(key).unwrap();
 
-        let result = rocksdb.get("key01").unwrap();
-        assert_eq!(data, result);
+        assert_eq!(wasm_fn, wasm_updated);
 
-        drop(rocksdb.db.lock().unwrap());
-    }
+        let _ = db.del(key).unwrap();
+        let wasm_fn = db.get(key);
 
-    #[test]
-    fn test_update_data() {
-        let data = wasm_mocked();
-        let mut rocksdb = RocksDB::dev();
-
-        rocksdb.put("key02", data.clone()).unwrap();
-
-        let mut updated_data = data.clone();
-        updated_data.metadata.id = 456;
-        rocksdb.put("key02", updated_data.clone()).unwrap();
-
-        let result = rocksdb.get("key02").unwrap();
-        assert_eq!(updated_data, result);
-
-        drop(rocksdb.db.lock().unwrap());
-    }
-
-    #[test]
-    fn test_delete_data() {
-        let data = wasm_mocked();
-        let mut rocksdb = RocksDB::dev();
-
-        rocksdb.put("key03", data).unwrap();
-        rocksdb.del("key03").unwrap();
-
-        let result = rocksdb.get("key03");
-        assert!(result.is_none());
-
-        drop(rocksdb.db.lock().unwrap());
+        assert_eq!(wasm_fn, None);
     }
 }
