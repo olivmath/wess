@@ -1,11 +1,14 @@
-//! The server module contains the main server struct and its associated state
-//! for the Wess application.
+//! # The `server` module provides a HTTP server for the Wess application.
 //!
 //! This module contains the following main components:
 //!
-//! - [`WessServer`]: A struct representing the main server for the Wess application.
-//! - [`AppState`]: A struct representing the global state for the WessServer,
-//! which holds the necessary Senders for writing, reading, and running jobs.
+//! - [`WessServer`]: A struct representing the HTTP server.
+//! - [`AppState`]: A struct representing the global state of the server.
+//!
+//! The `server` module depends on the following modules:
+//!
+//! - [`routes`]: A module that contains the logic for handling HTTP routes.
+//! - [`request`]: A module that contains the structs for wrap json requests.
 
 pub mod request;
 mod routes;
