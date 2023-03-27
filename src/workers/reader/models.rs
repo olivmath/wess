@@ -10,6 +10,12 @@ pub struct RJob {
 }
 
 impl RJob {
+    /// # Creates a new read job
+    ///
+    /// ## Arguments
+    ///
+    /// * `responder` - Channel to send the read response
+    /// * `id` - ID of the wasm function to be read
     pub fn new(responder: Sender<ReadResponse>, id: String) -> Self {
         Self { responder, id }
     }
@@ -23,12 +29,20 @@ pub enum ReadResponse {
 }
 
 impl ReadResponse {
-    /// # Success: [`WasmFn`]
+    /// # Creates a success response with the retrieved [`WasmFn`]
+    ///
+    /// ## Arguments
+    ///
+    /// * `wasm_fn` - Retrieved wasm function
     pub fn new(wasm_fn: WasmFn) -> Self {
         ReadResponse::Success(wasm_fn)
     }
 
-    /// # Fail: [`String`]
+    /// # Creates a fail response with a message
+    ///
+    /// ## Arguments
+    ///
+    /// * `msg` - Error message
     pub fn fail(msg: String) -> Self {
         ReadResponse::Fail(msg)
     }
