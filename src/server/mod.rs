@@ -1,51 +1,88 @@
-//! This module contains the WessServer implementation and associated functionality.
+//! The server module contains the main server struct and its associated state
+//! for the Wess application.
 //!
-//! It provides an HTTP server built on top of the Tide framework to handle incoming requests,
-//! which are then processed accordingly based on the registered routes.
+//! This module contains the following main components:
+//!
+//! - [`WessServer`]: A struct representing the main server for the Wess application.
+//! - [`AppState`]: A struct representing the global state for the WessServer,
+//! which holds the necessary Senders for writing, reading, and running jobs.
 
 pub mod request;
 mod routes;
 
-use self::routes::{get_wasm, job_maker};
-use crate::{runner::job::Job, wasm::JobType};
+use self::routes::{read_op, run_op, write_op};
+use crate::workers::{
+    reader::models::RJob,
+    runner::models::RunJob,
+    writer::models::{WJob, WOps},
+};
 use tide::Server;
 use tokio::sync::mpsc::Sender;
 
-/// AppState represents the shared state of the application, including the Sender<WasmJob> instance.
+/// The global state for the WessServer,
+/// which holds the necessary `Sender`s for writing,
+/// reading and running jobs.
 #[derive(Clone)]
 pub struct AppState {
-    pub tx: Sender<Job>,
+    pub writer_tx: Sender<WJob>,
+    pub reader_tx: Sender<RJob>,
+    pub runner_tx: Sender<RunJob>,
 }
 
-/// WessServer is a struct that encapsulates the Tide server instance.
+/// The main server struct for the Wess application.
 #[derive(Clone)]
 pub struct WessServer {
     app: Server<AppState>,
 }
 
 impl WessServer {
-    /// Constructs a new WessServer with the provided Sender<WasmJob> instance.
+    /// # Creates a new instance of the WessServer struct.
     ///
-    /// # Arguments
+    /// ## Arguments
     ///
-    /// * `tx` - A Sender<WasmJob> instance to be used for the server's state.
-    #[allow(clippy::new_without_default)]
-    pub fn new(tx: Sender<Job>) -> WessServer {
-        let mut app = tide::with_state(AppState { tx });
-        app.at("/:id")
-            .get(|req| async { get_wasm(req).await })
-            .put(|req| async { job_maker(req, JobType::Modity).await })
-            .delete(|req| async { job_maker(req, JobType::Delete).await });
+    /// * `writer_tx` - A `Sender<WJob>` for sending jobs to the writer worker.
+    /// * `reader_tx` - A `Sender<RJob>` for sending jobs to the reader worker.
+    /// * `runner_tx` - A `Sender<RunJob>` for sending jobs to the runner worker.
+    ///
+    /// ## Returns
+    ///
+    /// * An instance of `WessServer`.
+    pub fn new(
+        writer_tx: Sender<WJob>,
+        reader_tx: Sender<RJob>,
+        runner_tx: Sender<RunJob>,
+    ) -> Self {
+        let mut app = tide::with_state(AppState {
+            writer_tx,
+            reader_tx,
+            runner_tx,
+        });
 
+        // Writer ops
         app.at("/")
-            .post(|req| async { job_maker(req, JobType::Save).await });
+            .post(|req| async { write_op(req, WOps::Create).await });
+        app.at("/:id")
+            .put(|req| async { write_op(req, WOps::Update).await })
+            .delete(|req| async { write_op(req, WOps::Delete).await });
+
+        // Read ops
+        app.at("/:id").get(|req| async { read_op(req).await });
+
+        // Run Ops
+        app.at("/:id").post(|req| async { run_op(req).await });
 
         WessServer { app }
     }
 
-    /// Starts the HTTP server and listens for incoming connections.
+    /// # Starts the server on the specified address.
     ///
-    /// This version of WessServer supports the following routes:
+    /// ## Arguments
+    ///
+    /// * `addr` - A `&str` representing the address to listen to.
+    ///
+    /// ## Returns
+    ///
+    /// * A `std::io::Result` indicating if the server started successfully.
     pub async fn run(self, addr: &str) -> std::io::Result<()> {
         self.app.listen(addr).await
     }
