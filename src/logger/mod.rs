@@ -3,10 +3,12 @@ use std::error::Error;
 use term_size::dimensions;
 use textwrap::fill;
 
-/// Logs the given text to stdout, wrapped and formatted according to the terminal width.
+/// # Logs the given text to stdout.
+/// Wrapped and formatted according to the terminal width.
 ///
-/// The input text is wrapped based on the terminal width, and the wrapped text is printed
-/// with a green line above and below. If the terminal width cannot be determined, a default
+/// The input text is wrapped based on the terminal width,
+/// and the wrapped text is printed with a green line above and below.
+/// If the terminal width cannot be determined, a default
 /// width of 80 characters is used.
 ///
 /// # Arguments
@@ -53,4 +55,9 @@ pub async fn stdout_log(text: &str) -> Result<(), Box<dyn Error + Send + Sync>> 
 pub fn clear_terminal_with(string: &str) {
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
     println!("{}", string);
+}
+
+/// simple error logs
+pub fn log_err(message: String) {
+    eprintln!("{message}");
 }
