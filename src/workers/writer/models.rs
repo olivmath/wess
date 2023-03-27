@@ -1,4 +1,4 @@
-use crate::server::request::WRequest;
+use crate::server::models::WRequest;
 
 /// # Write Job Type
 pub struct WJob {

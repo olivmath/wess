@@ -1,4 +1,4 @@
-use crate::server::request::RunRequest;
+use crate::server::models::RunRequest;
 use serde::Serialize;
 use tokio::sync::oneshot::Sender;
 
