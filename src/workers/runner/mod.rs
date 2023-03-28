@@ -8,9 +8,10 @@
 //!
 //! - [`models`]: A module that contains the models for wrap data by channels.
 
+pub mod engine;
 pub mod models;
 
-use self::models::{RunJob, RunResponse, RunnerError};
+use self::{models::{RunJob, RunResponse, RunnerError}, engine::Runtime};
 use crate::{
     database::{models::WasmFn, RocksDB},
     server::models::RunRequest,
@@ -83,14 +84,10 @@ impl Runner {
         wasm_fn: WasmFn,
         args: RunRequest,
     ) -> Result<RunResponse, RunnerError> {
-        match Ok::<u8, RunnerError>(77) {
+        let mut runtime = Runtime::new(wasm_fn.clone());
+        match runtime.run() {
             Ok(r) => Ok(RunResponse::new(r.to_string())),
-            Err(e) => match e {
-                RunnerError::Execution(_) => {
-                    Err(RunnerError::Execution("dont executed".to_string()))
-                }
-                _ => Err(RunnerError::Unknown("unknown error".to_string())),
-            },
+            Err(e) => Err(RunnerError::Execution(e.to_string())),
         }
     }
 }
