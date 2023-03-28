@@ -3,13 +3,12 @@ mod logger;
 mod server;
 mod workers;
 
-
 use database::RocksDB;
 use logger::{clear_terminal_with, stdout_log};
 use server::WessServer;
-use workers::{writer::Writer, reader::Reader, runner::Runner};
 use std::{error::Error, sync::Arc};
 use tokio::{sync::Mutex, try_join};
+use workers::{reader::Reader, runner::Runner, writer::Writer};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -17,8 +16,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     stdout_log("💽 Start RocksDB data base").await?;
     let db = RocksDB::new();
-    
-    
+
     stdout_log("🏗️ Create a threadset to run the tasks in the background").await?;
 
     stdout_log("👨🏻‍🏭 Start Writer executor").await?;
@@ -29,7 +27,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             writer.lock().await.run().await;
         })
     };
-    
+
     stdout_log("👨🏼‍🔧 Start Reader executor").await?;
     let (reader_tx, reader) = Reader::new(db.clone());
     let reader_task = {
