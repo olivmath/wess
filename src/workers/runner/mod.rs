@@ -80,10 +80,17 @@ impl Runner {
     /// * A [`Result<RunResponse, RunnerError>`] containing either the function's result or an error.
     pub async fn run_function(
         &self,
-        wasm_fn: WasmFn,
-        args: RunRequest,
+        _wasm_fn: WasmFn,
+        _args: RunRequest,
     ) -> Result<RunResponse, RunnerError> {
-        //
-        Ok(RunResponse::new("foi".into()))
+        match Ok::<u8, RunnerError>(77) {
+            Ok(r) => Ok(RunResponse::new(r.to_string())),
+            Err(e) => match e {
+                RunnerError::Execution(_) => {
+                    Err(RunnerError::Execution("dont executed".to_string()))
+                }
+                _ => Err(RunnerError::Unknown("unknown error".to_string())),
+            },
+        }
     }
 }
