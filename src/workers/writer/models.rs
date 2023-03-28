@@ -4,11 +4,10 @@
 //!
 //! - [`WJob`]: A struct representing a write job, containing a [`WRequest`], a write operation type [`WOps`], and an ID.
 //! - [`WOps`]: An enum representing a write operation type. It can be either create, update or delete.
-//! 
+//!
 //! The `models` module depends on the following modules:
 //!
 //! - [`WRequest`]: Represents a write request type.
-
 
 use crate::server::models::WRequest;
 
