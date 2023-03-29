@@ -60,7 +60,6 @@ impl CompiledWasmCache {
         match self.cached.get(&id) {
             Some(module) => Ok(module.clone()),
             None => {
-                thread::sleep(Duration::from_secs(3));
                 let new_module = match Module::from_binary(&engine, &f()) {
                     Ok(module) => module,
                     Err(e) => {
