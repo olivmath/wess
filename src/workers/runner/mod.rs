@@ -122,7 +122,7 @@ impl Runner {
         id: String,
     ) -> Result<RunResponse, RunnerError> {
         let mut runtime = Runtime::new(wasm_fn.clone());
-        match runtime.run(id, args, engine, cache) {
+        match runtime.run(cache, args, engine, id) {
             Ok(r) => Ok(RunResponse::new(r.to_string())),
             Err(e) => Err(e),
         }
