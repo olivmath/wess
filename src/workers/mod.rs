@@ -14,9 +14,6 @@
 //! - [`crate::database`]: Provides the database layer where the WebAssembly functions are stored.
 //! - [`tokio::sync`]: Provides the concurrency primitives used to communicate between the workers.
 //!
-//! [`reader`]: reader/mod.rs
-//! [`runner`]: runner/mod.rs
-//! [`writer`]: writer/mod.rs
 
 pub mod reader;
 pub mod runner;

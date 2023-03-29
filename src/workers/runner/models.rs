@@ -58,11 +58,11 @@ impl RunResponse {
 ///
 /// Variants:
 ///
-/// - [`InstantiateFunctionError(String, String)`]: An error occurred while trying to instantiate the WebAssembly function. The first `String` is the name of the function, and the second `String` is the error message.
-/// - [`FunctionExecutionError(String)`]: An error occurred during the execution of the WebAssembly function. The `String` contains details about the error.
-/// - [`InitializingError(String)`]: An error occurred while initializing the runner. The `String` contains details about the error.
-/// - [`CompilingError(String)`]: An error occurred while compiling the WebAssembly module. The `String` contains details about the error.
-/// - [`WasmNotFound`]: The WebAssembly module was not found.
+/// - `InstantiateFunctionError(String, String)`: An error occurred while trying to instantiate the WebAssembly function. The first `String` is the name of the function, and the second `String` is the error message.
+/// - `FunctionExecutionError(String)`: An error occurred during the execution of the WebAssembly function. The `String` contains details about the error.
+/// - `InitializingError(String)`: An error occurred while initializing the runner. The `String` contains details about the error.
+/// - `CompilingError(String)`: An error occurred while compiling the WebAssembly module. The `String` contains details about the error.
+/// - `WasmNotFound`: The WebAssembly module was not found.
 #[derive(Serialize, Debug)]
 pub enum RunnerError {
     InstantiateFunctionError(String, String),
