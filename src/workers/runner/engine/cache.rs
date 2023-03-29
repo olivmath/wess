@@ -11,8 +11,6 @@
 //! The cache is generic and can be used to store any type of data.
 
 use std::collections::{HashMap, VecDeque};
-use std::thread;
-use std::time::Duration;
 use wasmtime::Engine;
 use wasmtime::Error;
 use wasmtime::Module;
