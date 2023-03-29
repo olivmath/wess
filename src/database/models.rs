@@ -2,7 +2,7 @@
 //!
 //! This module contains the following types:
 //!
-//! - [`Wasm`]: A type alias for a Vec<u8> representing WebAssembly bytecode.
+//! - [`Wasm`]: A type alias for a [`Vec<u8>`] representing WebAssembly bytecode.
 //! - [`FnTypeArg`]: A struct representing an argument for a WebAssembly function, containing a name and a type.
 //! - [`WasmMetadata`]: A struct representing metadata associated with a WebAssembly function, containing its name, return type and a vector of function argument types.
 //! - [`WasmFn`]: A struct representing a WebAssembly function, containing its bytecode and metadata.
@@ -47,7 +47,7 @@ pub struct WasmMetadata {
     /// The name of the function.
     pub func: String,
     /// The return type of the function.
-    pub func_return_type: String,
+    pub return_type: String,
     /// A vector of function argument types.
     pub args: Vec<Option<FnTypeArg>>,
 }
@@ -58,16 +58,16 @@ impl WasmMetadata {
     /// ## Arguments
     ///
     /// * `func` - A string slice that represents the name of the function.
-    /// * `func_return_type` - A string slice that represents the return type of the function.
+    /// * `return_type` - A string slice that represents the return type of the function.
     /// * `args` - A vector of [`Option<FnTypeArg>`] objects that represent the function argument types.
     ///
     /// ## Returns
     ///
     /// * An instance of [`WasmMetadata`].
-    pub fn new(func: String, func_return_type: String, args: Vec<Option<FnTypeArg>>) -> Self {
+    pub fn new(func: String, return_type: String, args: Vec<Option<FnTypeArg>>) -> Self {
         Self {
             func,
-            func_return_type,
+            return_type,
             args,
         }
     }

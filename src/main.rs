@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     stdout_log("🏗️ Create a threadset to run the tasks in the background").await?;
 
-    stdout_log("👨🏻‍🏭 Start Writer executor").await?;
+    stdout_log("👨‍🏭 Start Writer executor").await?;
     let (writer_tx, writer) = Writer::new(db.clone());
     let writer_task = {
         let writer = Arc::clone(&writer);
@@ -28,7 +28,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
     };
 
-    stdout_log("👨🏼‍🔧 Start Reader executor").await?;
+    stdout_log("👨‍🔧 Start Reader executor").await?;
     let (reader_tx, reader) = Reader::new(db.clone());
     let reader_task = {
         let reader = Arc::clone(&reader);
@@ -36,7 +36,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             reader.lock().await.run().await;
         })
     };
-    stdout_log("👩🏾‍🔬 Start Runner executor").await?;
+    stdout_log("👩‍🔬 Start Runner executor").await?;
     let (runner_tx, runner) = Runner::new(db);
     let runner_task = {
         let runner = Arc::clone(&runner);

@@ -3,7 +3,7 @@
 //! This module contains the following types:
 //!
 //! - [`RunJob`]: A struct representing a run job, containing a [`RunRequest`], an ID, and a channel to send the [`RunResponse`].
-//! - [`RunResponse`]: An enum representing the response to a run job. It can be either [`Success`], containing a string with the output of the run job, or [`Fail`], containing a [`RunnerError`].
+//! - [`RunResponse`]: An enum representing the response to a run job. It can be either `Success`, containing a string with the output of the run job, or `Fail`, containing a [`RunnerError`].
 //! - [`RunnerError`]: An enum representing the possible errors that can occur during the execution of a run job. It can be either a `WasmNotFound` error, an `Execution` error with a string containing details about the error, or an `Unknown` error with a string describing the error.
 //!
 //! The `models` module depends on the following modules:

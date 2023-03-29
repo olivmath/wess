@@ -10,7 +10,7 @@
 //!
 //! The workers depend on the following modules:
 //!
-//! - [`crate::server::request`]: Defines the types of incoming requests to the server.
+//! - [`crate::server::models`]: Defines the types of incoming requests to the server.
 //! - [`crate::database`]: Provides the database layer where the WebAssembly functions are stored.
 //! - [`tokio::sync`]: Provides the concurrency primitives used to communicate between the workers.
 //!

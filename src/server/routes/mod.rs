@@ -46,7 +46,7 @@ use tide::{Error, Request, Response};
 ///
 /// ## Returns
 ///
-/// A [`Result`] containing a tuple with the ID of the [`WasmFn`] object and the [`WRequest`] object.
+/// A [`Result`] containing a tuple with the ID of the `WasmFn` object and the [`WRequest`] object.
 ///
 /// # Errors
 ///
