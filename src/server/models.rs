@@ -34,7 +34,27 @@ impl From<FnTypeArgRequest> for FnTypeArg {
     }
 }
 
-/// Represents a request to execute a WebAssembly function.
+/// # Represents a request to execute a WebAssembly function.
+///
+/// ## Example
+///
+/// ```json
+/// {
+///     "wasm": [1,2,3,4],
+///     "func": "sum",
+///     "return_type": "i32",
+///     "args_type": [
+///         {
+///             "type": "i32",
+///             "name": "x"
+///         },
+///         {
+///             "type": "i32",
+///             "name": "y"
+///         }
+///     ]
+/// }
+/// ```
 #[derive(Deserialize, Clone, Default, Debug)]
 pub struct WasmRequest {
     /// The arguments for the WebAssembly function.
@@ -94,6 +114,23 @@ pub struct FnArg {
 }
 
 /// # Represents a request to run a WebAssembly function.
+///
+/// ## Example
+///
+/// ```json
+/// {
+///     "args": [
+///         {
+///             "value": "3",
+///             "name": "x"
+///         },
+///         {
+///             "value": "2",
+///             "name": "y"
+///         }
+///     ]
+/// }
+/// ```
 #[derive(Deserialize, Debug)]
 pub struct RunRequest {
     /// The arguments for the WebAssembly function.

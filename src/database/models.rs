@@ -2,7 +2,7 @@
 //!
 //! This module contains the following types:
 //!
-//! - [`Wasm`]: A type alias for a Vec<u8> representing WebAssembly bytecode.
+//! - [`Wasm`]: A type alias for a [`Vec<u8>`] representing WebAssembly bytecode.
 //! - [`FnTypeArg`]: A struct representing an argument for a WebAssembly function, containing a name and a type.
 //! - [`WasmMetadata`]: A struct representing metadata associated with a WebAssembly function, containing its name, return type and a vector of function argument types.
 //! - [`WasmFn`]: A struct representing a WebAssembly function, containing its bytecode and metadata.
@@ -24,7 +24,7 @@ pub struct FnTypeArg {
 }
 
 impl FnTypeArg {
-    /// # Creates a new instance of the `FnTypeArg` structure.
+    /// # Creates a new instance of the [`FnTypeArg`] structure.
     ///
     /// ## Arguments
     ///
@@ -33,7 +33,7 @@ impl FnTypeArg {
     ///
     /// ## Returns
     ///
-    /// * An instance of `FnTypeArg`.
+    /// * An instance of [`FnTypeArg`].
     pub fn new(name: String, arg_type: String) -> Self {
         Self { name, arg_type }
     }
@@ -47,27 +47,27 @@ pub struct WasmMetadata {
     /// The name of the function.
     pub func: String,
     /// The return type of the function.
-    pub func_return_type: String,
+    pub return_type: String,
     /// A vector of function argument types.
     pub args: Vec<Option<FnTypeArg>>,
 }
 
 impl WasmMetadata {
-    /// # Creates a new instance of the `WasmMetadata` structure.
+    /// # Creates a new instance of the [`WasmMetadata`] structure.
     ///
     /// ## Arguments
     ///
     /// * `func` - A string slice that represents the name of the function.
-    /// * `func_return_type` - A string slice that represents the return type of the function.
-    /// * `args` - A vector of `Option<FnTypeArg>` objects that represent the function argument types.
+    /// * `return_type` - A string slice that represents the return type of the function.
+    /// * `args` - A vector of [`Option<FnTypeArg>`] objects that represent the function argument types.
     ///
     /// ## Returns
     ///
-    /// * An instance of `WasmMetadata`.
-    pub fn new(func: String, func_return_type: String, args: Vec<Option<FnTypeArg>>) -> Self {
+    /// * An instance of [`WasmMetadata`].
+    pub fn new(func: String, return_type: String, args: Vec<Option<FnTypeArg>>) -> Self {
         Self {
             func,
-            func_return_type,
+            return_type,
             args,
         }
     }
@@ -83,17 +83,27 @@ pub struct WasmFn {
 }
 
 impl WasmFn {
-    /// # Creates a new instance of the `WasmFn` structure.
+    /// # Creates a new instance of the [`WasmFn`] structure.
     ///
     /// ## Arguments
     ///
-    /// * `wasm` - A `Wasm` object that represents the WebAssembly bytecode.
-    /// * `metadata` - A `WasmMetadata` object that represents the metadata associated with the function.
+    /// * `wasm` - A [`Wasm`] object that represents the WebAssembly bytecode.
+    /// * `metadata` - A [`WasmMetadata`] object that represents the metadata associated with the function.
     ///
     /// ## Returns
     ///
-    /// * An instance of `WasmFn`.
+    /// * An instance of [`WasmFn`].
     pub fn new(wasm: Wasm, metadata: WasmMetadata) -> Self {
         Self { wasm, metadata }
+    }
+    /// # Convert the [`Wasm`] bytecode of a [`WasmFn`] instance to a byte slice.
+    ///
+    /// This method returns the WebAssembly bytecode of the [`WasmFn`] instance as a byte slice.
+    ///
+    /// ## Returns
+    ///
+    /// * A byte slice `&[u8]` representing the WebAssembly bytecode of the [`WasmFn`] instance.
+    pub fn to_binary(&self) -> &[u8] {
+        self.wasm.as_slice()
     }
 }

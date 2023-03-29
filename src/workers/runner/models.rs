@@ -1,10 +1,10 @@
-//! # This `models` module provides types for `runner` module
+//! # This `models` module provides types for the `runner` module
 //!
 //! This module contains the following types:
 //!
 //! - [`RunJob`]: A struct representing a run job, containing a [`RunRequest`], an ID, and a channel to send the [`RunResponse`].
-//! - [`RunResponse`]: An enum representing the response to a run job. It can be either [`Success`], containing a string with the output of the run job, or [`Fail`], containing a [`RunnerError`].
-//! - [`RunnerError`]: An enum representing the possible errors that can occur during the execution of a run job. It can be either a `WasmNotFound` error, an `Execution` error with a string containing details about the error, or an `Unknown` error with a string describing the error.
+//! - [`RunResponse`]: An enum representing the response to a run job. It can be either `Success`, containing a string with the output of the run job, or `Fail`, containing a [`RunnerError`].
+//! - [`RunnerError`]: An enum representing the possible errors that can occur during the execution of a run job. It includes errors such as `InstantiateFunctionError`, `FunctionExecutionError`, `InitializingError`, `CompilingError`, and `WasmNotFound`.
 //!
 //! The `models` module depends on the following modules:
 //!
@@ -12,6 +12,7 @@
 
 use crate::server::models::RunRequest;
 use serde::Serialize;
+use std::fmt;
 use tokio::sync::oneshot::Sender;
 
 /// Run Job Type
@@ -51,9 +52,42 @@ impl RunResponse {
     }
 }
 
+/// # RunnerError Enum
+///
+/// Enum representing the possible errors that can occur during the execution of a run job.
+///
+/// Variants:
+///
+/// - [`InstantiateFunctionError(String, String)`]: An error occurred while trying to instantiate the WebAssembly function. The first `String` is the name of the function, and the second `String` is the error message.
+/// - [`FunctionExecutionError(String)`]: An error occurred during the execution of the WebAssembly function. The `String` contains details about the error.
+/// - [`InitializingError(String)`]: An error occurred while initializing the runner. The `String` contains details about the error.
+/// - [`CompilingError(String)`]: An error occurred while compiling the WebAssembly module. The `String` contains details about the error.
+/// - [`WasmNotFound`]: The WebAssembly module was not found.
 #[derive(Serialize, Debug)]
 pub enum RunnerError {
-    Execution(String),
-    Unknown(String),
+    InstantiateFunctionError(String, String),
+    FunctionExecutionError(String),
+    InitializingError(String),
+    CompilingError(String),
     WasmNotFound,
+}
+
+impl fmt::Display for RunnerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RunnerError::InstantiateFunctionError(name, err) => {
+                write!(f, "Error instantiating function {}: {}", name, err)
+            }
+            RunnerError::FunctionExecutionError(err) => {
+                write!(f, "Error executing function: {}", err)
+            }
+            RunnerError::InitializingError(err) => {
+                write!(f, "Error initializing runner: {}", err)
+            }
+            RunnerError::CompilingError(err) => {
+                write!(f, "Error compiling wasm module: {}", err)
+            }
+            RunnerError::WasmNotFound => write!(f, "Wasm module not found"),
+        }
+    }
 }
