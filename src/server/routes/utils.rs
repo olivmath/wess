@@ -1,5 +1,4 @@
 use crate::{
-    logger::log_err,
     server::{
         models::{RunRequest, WRequest},
         AppState,
@@ -11,6 +10,7 @@ use crate::{
     },
 };
 use async_std::task;
+use log::error;
 use rand::Rng;
 use serde::Serialize;
 use serde_json::json;
@@ -94,7 +94,7 @@ pub async fn send_to_writer(
 
     task::spawn(async move {
         if let Err(e) = tx.send(wjob).await {
-            log_err(format!("Erro ao enviar mensagem: {e}"));
+            error!(target:"err","Erro ao enviar mensagem: {e}");
         }
     });
 
