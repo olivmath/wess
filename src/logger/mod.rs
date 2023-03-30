@@ -1,3 +1,4 @@
+use log::error;
 use log4rs::{
     append::{
         console::{ConsoleAppender, Target},
@@ -7,6 +8,7 @@ use log4rs::{
     encode::pattern::PatternEncoder,
     Config,
 };
+use std::fmt::Display;
 
 pub fn init_logger() {
     let stdout = ConsoleAppender::builder()
@@ -43,6 +45,7 @@ pub fn init_logger() {
         .logger(
             Logger::builder()
                 .appender("wess_log")
+                .appender("stdout")
                 .build("wess", log::LevelFilter::Trace),
         )
         .logger(
@@ -65,10 +68,14 @@ pub fn init_logger() {
                 .appender("tx_log")
                 .appender("run_log")
                 .appender("err_log")
-                .appender("stdout")
                 .build(log::LevelFilter::Off),
         )
         .unwrap();
 
     log4rs::init_config(config).unwrap();
+}
+
+pub fn log_error<E: Display>(e: E) -> E {
+    error!(target: "err", "{e}");
+    e
 }
