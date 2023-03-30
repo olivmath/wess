@@ -16,11 +16,12 @@
 //! - [`WasmFn`]: Represents a WebAssembly function.
 //! - [`WasmMetadata`]: Represents metadata associated with a WebAssembly function.
 
+use super::errors::RequestError;
 use crate::database::models::{FnTypeArg, Wasm, WasmFn, WasmMetadata};
 use serde;
 use serde::Deserialize;
 
-/// Represents the type of an argument in a WebAssembly function request.
+/// # Represents the type of an argument in a WebAssembly function request.
 #[derive(Deserialize, Clone, Debug)]
 pub struct FnTypeArgRequest {
     #[serde(rename = "type")]
@@ -71,13 +72,6 @@ pub struct WasmRequest {
 #[derive(Deserialize, Clone)]
 pub struct WRequest(pub Option<WasmRequest>);
 
-/// # Represents an error that can occur when parsing a request.
-#[derive(Debug)]
-pub enum RequestError {
-    /// Indicates that the JSON in the request is invalid.
-    InvalidJson,
-}
-
 impl WRequest {
     /// # Converts a `WRequest` object to a `WasmFn` object.
     ///
@@ -99,7 +93,9 @@ impl WRequest {
             let wasm_fn = WasmFn::new(wasm_req.wasm, wasm_metadata);
             Ok(wasm_fn)
         } else {
-            Err(RequestError::InvalidJson)
+            Err(RequestError::InvalidJson(
+                "Unable to convert json to wasmfn".to_string(),
+            ))
         }
     }
 }
