@@ -28,6 +28,7 @@ mod errors;
 pub mod models;
 
 use self::models::WasmFn;
+use crate::logger;
 use errors::RocksDBError;
 use lazy_static::lazy_static;
 use log::{error, info};
@@ -57,7 +58,7 @@ lazy_static! {
         match DataBase::open_default(path) {
             Ok(db) => Arc::new(Mutex::new(db)),
             Err(err) => {
-                error!(target: "err","DB dont open: {err}");
+                error!(target: "err","DEV DB dont open: {err}");
                 panic!("DB dont open: {}", err);
             }
         }
@@ -71,10 +72,6 @@ pub struct RocksDB {
 }
 
 impl RocksDB {
-    fn log_error(&self, e: RocksDBError) -> RocksDBError {
-        error!(target: "err", "{:?}", e);
-        e
-    }
     /// # Creates a new instance of the `RocksDB` structure.
     ///
     /// ## Returns
@@ -123,7 +120,7 @@ impl RocksDB {
             .lock()
             .unwrap()
             .put(key, serde_json::to_vec(&wasm).unwrap())
-            .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))
+            .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
             .and_then(|_| Ok(key.to_string()))
     }
 
@@ -143,7 +140,7 @@ impl RocksDB {
             .lock()
             .unwrap()
             .get(key)
-            .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))
+            .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
             .unwrap_or_default()
         {
             Some(serde_json::from_slice::<WasmFn>(&v).unwrap())
@@ -167,7 +164,7 @@ impl RocksDB {
             .map(|item| match item {
                 Ok((_, v)) => Some(serde_json::from_slice(&v).unwrap()),
                 Err(e) => {
-                    self.log_error(RocksDBError::Unknown(e.to_string()));
+                    logger::log_error(RocksDBError::Unknown(e.to_string()));
                     None
                 }
             })
@@ -195,7 +192,7 @@ impl RocksDB {
             .lock()
             .unwrap()
             .get(key)
-            .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))
+            .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
             .unwrap_or_default();
         info!(target: "tx", "UPDATE {key}");
         if let Some(_) = value {
@@ -204,10 +201,11 @@ impl RocksDB {
                 .lock()
                 .unwrap()
                 .put(key.as_bytes(), new_value)
-                .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))?;
+                .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
+                .unwrap();
             Ok(key.to_owned())
         } else {
-            Err(self.log_error(RocksDBError::NotFound))
+            Err(logger::log_error(RocksDBError::NotFound))
         }
     }
 
@@ -232,16 +230,18 @@ impl RocksDB {
             .lock()
             .unwrap()
             .get(key)
-            .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))?;
+            .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
+            .unwrap();
         if let Some(_) = value {
             self.db
                 .lock()
                 .unwrap()
                 .delete(key)
-                .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))?;
+                .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
+                .unwrap();
             Ok(key.to_owned())
         } else {
-            Err(self.log_error(RocksDBError::NotFound))
+            Err(logger::log_error(RocksDBError::NotFound))
         }
     }
 }
