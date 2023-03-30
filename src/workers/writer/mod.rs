@@ -11,7 +11,8 @@
 pub mod models;
 
 use self::models::{WJob, WOps};
-use crate::{database::RocksDB, logger::log_err};
+use crate::database::RocksDB;
+use log::error;
 use std::sync::Arc;
 use tokio::sync::{
     mpsc::{self, Receiver, Sender},
@@ -44,20 +45,17 @@ impl Writer {
             match job_type {
                 WOps::Create => {
                     if let Err(e) = self.db.add(id, wasm_req.to_wasm_fn().unwrap()) {
-                        // TODO: create a logger for audit errors
-                        log_err(format!("Erro ao criar id: {id} erro: {}", e.to_string()));
+                        error!(target:"err", "CREATE {id} {e}");
                     };
                 }
                 WOps::Update => {
                     if let Err(e) = self.db.upd(id, wasm_req.to_wasm_fn().unwrap()) {
-                        // TODO: create a logger for audit errors
-                        log_err(format!("Erro ao editar id: {id} erro: {}", e.to_string()));
+                        error!(target:"err", "UPDATE {id} {e}");
                     };
                 }
                 WOps::Delete => {
                     if let Err(e) = self.db.del(id) {
-                        // TODO: create a logger for audit errors
-                        log_err(format!("Erro ao deletar id: {id} erro: {}", e.to_string()));
+                        error!(target:"err", "DELETE {id} {e}");
                     };
                 }
             }
