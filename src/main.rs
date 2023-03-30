@@ -32,7 +32,8 @@ mod server;
 mod workers;
 
 use database::RocksDB;
-use logger::{clear_terminal_with, stdout_log};
+use log::info;
+use logger::init_logger;
 use server::WessServer;
 use std::{error::Error, sync::Arc};
 use tokio::{sync::Mutex, try_join};
@@ -40,14 +41,15 @@ use workers::{reader::Reader, runner::Runner, writer::Writer};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    clear_terminal_with("");
+    init_logger();
 
-    stdout_log("💽 Start RocksDB data base").await?;
+    info!(target:"wess","------------------------------------------------");
+    info!(target:"wess","Start Wess Server");
+
+    info!(target:"wess","Start RocksDB data base");
     let db = RocksDB::new();
 
-    stdout_log("🏗️ Create a threadset to run the tasks in the background").await?;
-
-    stdout_log("👨‍🏭 Start Writer executor").await?;
+    info!(target:"wess","Start Writer executor");
     let (writer_tx, writer) = Writer::new(db.clone());
     let writer_task = {
         let writer = Arc::clone(&writer);
@@ -56,7 +58,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
     };
 
-    stdout_log("👨‍🔧 Start Reader executor").await?;
+    info!(target:"wess","Start Reader executor");
     let (reader_tx, reader) = Reader::new(db.clone());
     let reader_task = {
         let reader = Arc::clone(&reader);
@@ -64,7 +66,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             reader.lock().await.run().await;
         })
     };
-    stdout_log("👩‍🔬 Start Runner executor").await?;
+    info!(target:"wess","Start Runner executor");
     let (runner_tx, runner) = Runner::new(db);
     let runner_task = {
         let runner = Arc::clone(&runner);
@@ -73,7 +75,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
     };
 
-    stdout_log("🛰️  Run server on `http://127.0.0.1:3000`").await?;
+    info!(target:"wess","Run server on `http://127.0.0.1:3000`");
     let wess = Arc::new(Mutex::new(WessServer::new(writer_tx, reader_tx, runner_tx)));
 
     let server_task = {
