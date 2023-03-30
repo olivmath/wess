@@ -30,6 +30,7 @@ pub mod models;
 use self::models::WasmFn;
 use errors::RocksDBError;
 use lazy_static::lazy_static;
+use log::{error, info};
 use rocksdb::{DBWithThreadMode, IteratorMode, MultiThreaded, Options, DB as DataBase};
 use std::sync::{Arc, Mutex};
 
@@ -42,7 +43,10 @@ lazy_static! {
 
         match DataBase::open_default(path) {
             Ok(db) => Arc::new(Mutex::new(db)),
-            Err(err) => panic!("DB dont open: {}", err),
+            Err(err) => {
+                error!(target: "err","DB dont open: {err}");
+                panic!("DB dont open: {}", err);
+            }
         }
     };
     static ref DEV_DB: Arc<Mutex<DBWithThreadMode<MultiThreaded>>> = {
@@ -52,7 +56,10 @@ lazy_static! {
 
         match DataBase::open_default(path) {
             Ok(db) => Arc::new(Mutex::new(db)),
-            Err(err) => panic!("DB dont open: {}", err),
+            Err(err) => {
+                error!(target: "err","DB dont open: {err}");
+                panic!("DB dont open: {}", err);
+            }
         }
     };
 }
@@ -64,6 +71,10 @@ pub struct RocksDB {
 }
 
 impl RocksDB {
+    fn log_error(&self, e: RocksDBError) -> RocksDBError {
+        error!(target: "err", "{:?}", e);
+        e
+    }
     /// # Creates a new instance of the `RocksDB` structure.
     ///
     /// ## Returns
@@ -107,11 +118,12 @@ impl RocksDB {
     /// * A `Result` object that returns the key if the operation was successful,
     /// or a `RocksDBError` object if the operation failed.
     pub fn add(&mut self, key: &str, wasm: WasmFn) -> Result<String, RocksDBError> {
+        info!(target: "tx", "CREATE {key}");
         self.db
             .lock()
             .unwrap()
             .put(key, serde_json::to_vec(&wasm).unwrap())
-            .map_err(|e| RocksDBError::Unknown(e.to_string()))
+            .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))
             .and_then(|_| Ok(key.to_string()))
     }
 
@@ -126,17 +138,17 @@ impl RocksDB {
     /// * An `Option` that returns the value of the key if it exists in the database,
     /// or `None` if it doesn't.
     pub fn get(&self, key: &str) -> Option<WasmFn> {
-        let value = self
+        if let Some(v) = self
             .db
             .lock()
             .unwrap()
             .get(key)
-            .map_err(|e| RocksDBError::Unknown(e.to_string()))
-            .unwrap_or_default();
-
-        match value {
-            Some(v) => Some(serde_json::from_slice::<WasmFn>(&v).unwrap()),
-            None => None,
+            .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))
+            .unwrap_or_default()
+        {
+            Some(serde_json::from_slice::<WasmFn>(&v).unwrap())
+        } else {
+            None
         }
     }
 
@@ -154,7 +166,10 @@ impl RocksDB {
             .iterator(IteratorMode::Start)
             .map(|item| match item {
                 Ok((_, v)) => Some(serde_json::from_slice(&v).unwrap()),
-                Err(_) => None,
+                Err(e) => {
+                    self.log_error(RocksDBError::Unknown(e.to_string()));
+                    None
+                }
             })
             .collect()
     }
@@ -180,18 +195,19 @@ impl RocksDB {
             .lock()
             .unwrap()
             .get(key)
-            .map_err(|e| RocksDBError::Unknown(e.to_string()))
+            .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))
             .unwrap_or_default();
+        info!(target: "tx", "UPDATE {key}");
         if let Some(_) = value {
             let new_value = serde_json::to_vec(&wasm).unwrap();
             self.db
                 .lock()
                 .unwrap()
                 .put(key.as_bytes(), new_value)
-                .map_err(|e| RocksDBError::Unknown(e.to_string()))?;
+                .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))?;
             Ok(key.to_owned())
         } else {
-            Err(RocksDBError::NotFound)
+            Err(self.log_error(RocksDBError::NotFound))
         }
     }
 
@@ -210,21 +226,22 @@ impl RocksDB {
     ///
     /// Returns a `RocksDBError::NotFound` error if the key doesn't exist in the database.
     pub fn del(&mut self, key: &str) -> Result<String, RocksDBError> {
+        info!(target: "tx", "DELETE {key}");
         let value = self
             .db
             .lock()
             .unwrap()
             .get(key)
-            .map_err(|e| RocksDBError::Unknown(e.to_string()))?;
+            .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))?;
         if let Some(_) = value {
             self.db
                 .lock()
                 .unwrap()
                 .delete(key)
-                .map_err(|e| RocksDBError::Unknown(e.to_string()))?;
+                .map_err(|e| self.log_error(RocksDBError::Unknown(e.to_string())))?;
             Ok(key.to_owned())
         } else {
-            Err(RocksDBError::NotFound)
+            Err(self.log_error(RocksDBError::NotFound))
         }
     }
 }
