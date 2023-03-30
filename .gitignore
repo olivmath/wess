@@ -1,3 +1,4 @@
-target/
-rocksdb/
 playground/
+rocksdb/
+target/
+log/
