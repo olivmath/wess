@@ -1,63 +1,74 @@
-use colored::Colorize;
-use std::error::Error;
-use term_size::dimensions;
-use textwrap::fill;
+use log4rs::{
+    append::{
+        console::{ConsoleAppender, Target},
+        file::FileAppender,
+    },
+    config::{Appender, Logger, Root},
+    encode::pattern::PatternEncoder,
+    Config,
+};
 
-/// # Logs the given text to stdout.
-/// Wrapped and formatted according to the terminal width.
-///
-/// The input text is wrapped based on the terminal width,
-/// and the wrapped text is printed with a green line above and below.
-/// If the terminal width cannot be determined, a default
-/// width of 80 characters is used.
-///
-/// # Arguments
-///
-/// * `text` - The text to be logged to stdout.
-///
-/// # Returns
-///
-/// * `Result<(), Box<dyn Error + Send + Sync>>` - Returns an empty `Result` on successful logging.
-///   In case of any error, it returns an `Error` trait object.
-///
-/// # Errors
-///
-/// This function might return an error if there's an issue with stdout.
-///
-/// # Example
-///
-/// ```
-/// stdout_log("This is a sample log message.").await.unwrap();
-/// ```
-///
-/// # Result in Terminal
-///
-/// ```text
-/// // ------------------------------------------------------------
-/// // This is a sample log message.
-/// // ------------------------------------------------------------
-/// ```
-pub async fn stdout_log(text: &str) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let width = dimensions().unwrap_or((80, 24)).0; // obtém a largura atual do terminal ou usa 80 como padrão
-    let wrapped_text = fill(text, width); // quebra a string em várias linhas de acordo com a largura
+pub fn init_logger() {
+    let stdout = ConsoleAppender::builder()
+        .encoder(Box::new(PatternEncoder::new("{d} {l} {m}{n}")))
+        .target(Target::Stdout)
+        .build();
 
-    let line = "-".repeat(width);
-    println!("{}", line.green());
-    for line in wrapped_text.lines() {
-        println!("{}", line.white());
-    }
-    println!("{}", line.green());
+    let wess_log = FileAppender::builder()
+        .encoder(Box::new(PatternEncoder::new("{d} {l} {m}{n}")))
+        .build("log/wess.log")
+        .unwrap();
 
-    Ok(())
-}
+    let tx_log = FileAppender::builder()
+        .encoder(Box::new(PatternEncoder::new("{d} {l} {m}{n}")))
+        .build("log/tx.log")
+        .unwrap();
 
-/// Clear terminal
-pub fn clear_terminal_with(string: &str) {
-    print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-    println!("{}", string);
-}
+    let run_log = FileAppender::builder()
+        .encoder(Box::new(PatternEncoder::new("{d} {l} {m}{n}")))
+        .build("log/run.log")
+        .unwrap();
 
-/// simple error logs
-pub fn log_err(message: String) {
-    eprintln!("{message}");
+    let err_log = FileAppender::builder()
+        .encoder(Box::new(PatternEncoder::new("{d} {l} {m}{n}")))
+        .build("log/err.log")
+        .unwrap();
+
+    let config = Config::builder()
+        .appender(Appender::builder().build("stdout", Box::new(stdout)))
+        .appender(Appender::builder().build("wess_log", Box::new(wess_log)))
+        .appender(Appender::builder().build("tx_log", Box::new(tx_log)))
+        .appender(Appender::builder().build("run_log", Box::new(run_log)))
+        .appender(Appender::builder().build("err_log", Box::new(err_log)))
+        .logger(
+            Logger::builder()
+                .appender("wess_log")
+                .build("wess", log::LevelFilter::Trace),
+        )
+        .logger(
+            Logger::builder()
+                .appender("tx_log")
+                .build("tx", log::LevelFilter::Trace),
+        )
+        .logger(
+            Logger::builder()
+                .appender("run_log")
+                .build("run", log::LevelFilter::Trace),
+        )
+        .logger(
+            Logger::builder()
+                .appender("err_log")
+                .build("err", log::LevelFilter::Error),
+        )
+        .build(
+            Root::builder()
+                .appender("tx_log")
+                .appender("run_log")
+                .appender("err_log")
+                .appender("stdout")
+                .build(log::LevelFilter::Off),
+        )
+        .unwrap();
+
+    log4rs::init_config(config).unwrap();
 }
