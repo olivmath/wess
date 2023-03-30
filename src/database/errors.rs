@@ -1,3 +1,5 @@
+use std::fmt;
+
 /// An enum representing possible errors that can occur while interacting with RocksDB.
 #[derive(Debug)]
 pub enum RocksDBError {
@@ -8,12 +10,11 @@ pub enum RocksDBError {
     // ...
 }
 
-impl ToString for RocksDBError {
-    /// Converts the error into a string representation.
-    fn to_string(&self) -> String {
+impl fmt::Display for RocksDBError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RocksDBError::NotFound => "NotFound".to_string(),
-            RocksDBError::Unknown(e) => format!("Unknown {}", e),
+            RocksDBError::Unknown(message) => write!(f, "Unknown error occurred: {}", message),
+            RocksDBError::NotFound => write!(f, "Requested key not found in the database"),
             // ...
         }
     }
