@@ -10,6 +10,7 @@
 //! - [`WRequest`]: Represents a write request type.
 
 use crate::server::models::WRequest;
+use core::fmt;
 
 /// # Write Job Type
 pub struct WJob {
@@ -40,4 +41,20 @@ pub enum WOps {
     Create,
     Update,
     Delete,
+}
+
+pub enum WriterError {
+    Create(String, String),
+    Update(String, String),
+    Delete(String, String),
+}
+
+impl fmt::Display for WriterError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            WriterError::Create(id, err) => write!(f, "Create: {id} Error: {err}"),
+            WriterError::Update(id, err) => write!(f, "Update: {id} Error: {err}"),
+            WriterError::Delete(id, err) => write!(f, "Delete: {id} Error: {err}"),
+        }
+    }
 }

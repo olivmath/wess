@@ -10,9 +10,8 @@
 
 pub mod models;
 
-use self::models::{WJob, WOps};
-use crate::database::RocksDB;
-use log::error;
+use self::models::{WJob, WOps, WriterError};
+use crate::{database::RocksDB, logger};
 use std::sync::Arc;
 use tokio::sync::{
     mpsc::{self, Receiver, Sender},
@@ -45,17 +44,17 @@ impl Writer {
             match job_type {
                 WOps::Create => {
                     if let Err(e) = self.db.add(id, wasm_req.to_wasm_fn().unwrap()) {
-                        error!(target:"err", "CREATE {id} {e}");
+                        logger::log_error(WriterError::Create(id.to_string(), e.to_string()));
                     };
                 }
                 WOps::Update => {
                     if let Err(e) = self.db.upd(id, wasm_req.to_wasm_fn().unwrap()) {
-                        error!(target:"err", "UPDATE {id} {e}");
+                        logger::log_error(WriterError::Update(id.to_string(), e.to_string()));
                     };
                 }
                 WOps::Delete => {
                     if let Err(e) = self.db.del(id) {
-                        error!(target:"err", "DELETE {id} {e}");
+                        logger::log_error(WriterError::Delete(id.to_string(), e.to_string()));
                     };
                 }
             }

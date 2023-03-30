@@ -16,7 +16,8 @@ pub mod cache;
 
 use self::cache::CompiledWasmCache;
 use crate::{
-    database::models::WasmFn, server::models::RunRequest, workers::runner::models::RunnerError,
+    database::models::WasmFn, logger, server::models::RunRequest,
+    workers::runner::models::RunnerError,
 };
 use wasmtime::{Engine, Linker, Store};
 
@@ -59,9 +60,8 @@ impl Runtime {
 
         let module = match cache.get(id, engine.clone(), || wasm_file.to_vec()) {
             Ok(m) => m,
-            Err(err) => {
-                let e = RunnerError::CompilingError(err.to_string());
-                eprintln!("{e}");
+            Err(e) => {
+                let e = logger::log_error(RunnerError::CompilingError(e.to_string()));
                 return Err(e);
             }
         };
@@ -70,30 +70,27 @@ impl Runtime {
         let mut storage = Store::new(&engine, ());
         let instance = match linker.instantiate(&mut storage, &module) {
             Ok(i) => i,
-            Err(err) => {
-                let e = RunnerError::InitializingError(err.to_string());
-                eprintln!("{e}");
+            Err(e) => {
+                let e = logger::log_error(RunnerError::InitializingError(e.to_string()));
                 return Err(e);
             }
         };
 
         let function = match instance.get_typed_func::<(), i32>(&mut storage, &function_name) {
             Ok(f) => f,
-            Err(err) => {
-                let e = RunnerError::InstantiateFunctionError(
+            Err(e) => {
+                let e = logger::log_error(RunnerError::InstantiateFunctionError(
                     function_name.to_string(),
-                    err.to_string(),
-                );
-                eprintln!("{e}");
+                    e.to_string(),
+                ));
                 return Err(e);
             }
         };
 
         let result = match function.call(storage, ()) {
             Ok(r) => r,
-            Err(err) => {
-                let e = RunnerError::FunctionExecutionError(err.to_string());
-                eprintln!("{e}");
+            Err(e) => {
+                let e = logger::log_error(RunnerError::FunctionExecutionError(e.to_string()));
                 return Err(e);
             }
         };

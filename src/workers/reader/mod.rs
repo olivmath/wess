@@ -66,9 +66,9 @@ impl Reader {
                     tokio::spawn(async move { responder.send(ReadResponse::new(wasm_fn)) });
                 }
                 None => {
-                    tokio::spawn(async move {
-                        responder.send(ReadResponse::fail("wasm fn not found".into()))
-                    });
+                    tokio::spawn(
+                        async move { responder.send(ReadResponse::fail("Not found".into())) },
+                    );
                 }
             };
         }
