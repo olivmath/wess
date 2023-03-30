@@ -10,15 +10,17 @@
 //! - [`routes`]: A module that contains the logic for handling HTTP routes.
 //! - [`models`]: A module that contains the models for wrap json requests.
 
+pub mod errors;
 pub mod models;
+pub mod response;
 mod routes;
 
-use self::routes::{read_op, run_op, write_op};
 use crate::workers::{
     reader::models::RJob,
     runner::models::RunJob,
     writer::models::{WJob, WOps},
 };
+use routes::{read_ops::make_read_op, run_ops::make_run_op, write_ops::make_write_op};
 use tide::Server;
 use tokio::sync::mpsc::Sender;
 
@@ -61,18 +63,18 @@ impl WessServer {
             runner_tx,
         });
 
-        // Writer ops
+        // Write ops
         app.at("/")
-            .post(|req| async { write_op(req, WOps::Create).await });
+            .post(|req| async { make_write_op(req, WOps::Create).await });
         app.at("/:id")
-            .put(|req| async { write_op(req, WOps::Update).await })
-            .delete(|req| async { write_op(req, WOps::Delete).await });
+            .put(|req| async { make_write_op(req, WOps::Update).await })
+            .delete(|req| async { make_write_op(req, WOps::Delete).await });
 
         // Read ops
-        app.at("/:id").get(|req| async { read_op(req).await });
+        app.at("/:id").get(|req| async { make_read_op(req).await });
 
         // Run Ops
-        app.at("/:id").post(|req| async { run_op(req).await });
+        app.at("/:id").post(|req| async { make_run_op(req).await });
 
         WessServer { app }
     }
