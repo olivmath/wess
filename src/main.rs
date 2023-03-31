@@ -28,6 +28,7 @@
 
 mod database;
 mod logger;
+mod metrics;
 mod server;
 mod workers;
 
@@ -75,14 +76,14 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
     };
 
-    info!(target:"wess", "Run server on `http://127.0.0.1:3000`");
+    info!(target:"wess", "Run server on `http://127.0.0.1:7770`");
     let wess = Arc::new(Mutex::new(WessServer::new(writer_tx, reader_tx, runner_tx)));
 
     let server_task = {
         let wess = Arc::clone(&wess);
         tokio::spawn(async move {
             let wess_instance = wess.lock().await.clone();
-            wess_instance.run("127.0.0.1:3000").await.unwrap();
+            wess_instance.run("127.0.0.1:7770").await.unwrap();
         })
     };
 
