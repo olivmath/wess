@@ -24,6 +24,7 @@
 //! The [`run_op`] function is used to run a WebAssembly function. It extracts the request data and
 //! passes it to the [`send_to_runner`] function to be sent to the runner thread.
 
+pub mod metrics;
 pub mod read_ops;
 pub mod run_ops;
 pub mod write_ops;

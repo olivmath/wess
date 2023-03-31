@@ -76,6 +76,10 @@ impl WessServer {
         // Run Ops
         app.at("/:id").post(|req| async { make_run_op(req).await });
 
+        // Metrics routes
+        app.at("/metrics")
+            .get(|_| async { prometheus_metrics().await });
+
         WessServer { app }
     }
 
