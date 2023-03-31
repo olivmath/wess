@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  wess:
+    build: .
+    container_name: wess
+    ports:
+      - "7770:7770"
+    volumes:
+      - ./log:/app/log
+
+  prometheus:
+    image: prom/prometheus:v2.33.0
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:8.3.6
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+volumes:
+  grafana-storage:
