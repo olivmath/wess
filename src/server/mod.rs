@@ -15,6 +15,7 @@ pub mod models;
 pub mod response;
 mod routes;
 
+use self::routes::{metrics::prometheus_metrics, middleware::RequestMetricsMiddleware};
 use crate::workers::{
     reader::models::RJob,
     runner::models::RunJob,
@@ -62,6 +63,9 @@ impl WessServer {
             reader_tx,
             runner_tx,
         });
+
+        // Metrics middleware
+        app.with(RequestMetricsMiddleware);
 
         // Write ops
         app.at("/")
