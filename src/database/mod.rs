@@ -28,6 +28,7 @@ mod errors;
 pub mod models;
 
 use self::models::WasmFn;
+use crate::config::CONFIG;
 use crate::logger;
 use errors::RocksDBError;
 use lazy_static::lazy_static;
@@ -38,11 +39,11 @@ use std::sync::{Arc, Mutex};
 // Creating the single instance of RocksDB with inter-thread security.
 lazy_static! {
     static ref DB: Arc<Mutex<DBWithThreadMode<MultiThreaded>>> = {
-        let path = "./rocksdb/prod";
+        let config = Arc::clone(&CONFIG);
         let mut options = Options::default();
         options.create_if_missing(true);
 
-        match DataBase::open_default(path) {
+        match DataBase::open_default(&config.database.path) {
             Ok(db) => Arc::new(Mutex::new(db)),
             Err(err) => {
                 error!(target: "err","DB dont open: {err}");
@@ -51,11 +52,11 @@ lazy_static! {
         }
     };
     static ref DEV_DB: Arc<Mutex<DBWithThreadMode<MultiThreaded>>> = {
-        let path = "./rocksdb/dev";
+        let config = Arc::clone(&CONFIG);
         let mut options = Options::default();
         options.create_if_missing(true);
 
-        match DataBase::open_default(path) {
+        match DataBase::open_default(&config.database.dev_path) {
             Ok(db) => Arc::new(Mutex::new(db)),
             Err(err) => {
                 error!(target: "err","DEV DB dont open: {err}");

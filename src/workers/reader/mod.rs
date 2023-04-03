@@ -20,7 +20,7 @@ use self::{
     cache::Cache,
     models::{RJob, ReadResponse},
 };
-use crate::database::RocksDB;
+use crate::{config::CONFIG, database::RocksDB};
 use std::sync::Arc;
 use tokio::sync::{
     mpsc::{self, Receiver, Sender},
@@ -48,7 +48,8 @@ impl Reader {
     ///
     /// A tuple containing a channel sender and an [`Arc<Mutex<Reader>>`] instance.
     pub fn new(db: RocksDB) -> (Sender<RJob>, Arc<Mutex<Reader>>) {
-        let (tx, rx) = mpsc::channel::<RJob>(100);
+        let channel_size = CONFIG.reader.channel_size;
+        let (tx, rx) = mpsc::channel::<RJob>(channel_size);
         let cache = Cache::new();
         (tx, Arc::new(Mutex::new(Reader { rx, db, cache })))
     }

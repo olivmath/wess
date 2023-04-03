@@ -26,12 +26,14 @@
 //!
 //! To get started with Wess
 
+mod config;
 mod database;
 mod logger;
 mod metrics;
 mod server;
 mod workers;
 
+use crate::config::CONFIG;
 use database::RocksDB;
 use log::info;
 use logger::init_logger;
@@ -42,6 +44,7 @@ use workers::{reader::Reader, runner::Runner, writer::Writer};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    let config = Arc::clone(&CONFIG);
     init_logger();
 
     info!(target:"wess", "------------------------------------------------");
@@ -76,14 +79,15 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
     };
 
-    info!(target:"wess", "Run server on `http://127.0.0.1:7770`");
+    let addr = format!("{}:{}", config.server.address, config.server.port);
+    info!(target:"wess", "Run server on {}", &addr);
     let wess = Arc::new(Mutex::new(WessServer::new(writer_tx, reader_tx, runner_tx)));
 
     let server_task = {
         let wess = Arc::clone(&wess);
         tokio::spawn(async move {
             let wess_instance = wess.lock().await.clone();
-            wess_instance.run("127.0.0.1:7770").await.unwrap();
+            wess_instance.run(&addr).await.unwrap();
         })
     };
 

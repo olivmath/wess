@@ -1,0 +1,18 @@
+[server]
+port = 7770
+address = "127.0.0.1"
+
+[database]
+path = "./rocksdb/prod"
+dev_path = "./rocksdb/dev"
+
+[reader]
+cache_size = 1024
+channel_size = 100
+
+[writer]
+channel_size = 100
+
+[runner]
+cache_size = 1024
+channel_size = 100
