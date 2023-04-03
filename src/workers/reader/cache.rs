@@ -10,10 +10,14 @@
 //!
 //! The cache is generic and can be used to store any type of data.
 
-use crate::database::models::WasmFn;
+use crate::{config::CONFIG, database::models::WasmFn};
+use lazy_static::lazy_static;
 use std::collections::{HashMap, VecDeque};
 
-const CACHE_SIZE: usize = 1024;
+lazy_static! {
+    static ref CACHE_SIZE: usize = CONFIG.reader.cache_size;
+}
+
 type Id = String;
 
 /// An in-memory cache with a Least Recently Used (LRU) eviction strategy.
@@ -33,7 +37,7 @@ impl Cache {
     pub fn new() -> Self {
         Self {
             cached: HashMap::new(),
-            queue: VecDeque::with_capacity(CACHE_SIZE),
+            queue: VecDeque::with_capacity(*CACHE_SIZE),
         }
     }
 
@@ -72,7 +76,7 @@ impl Cache {
     ///
     /// This method also handles cache eviction based on the LRU strategy.
     pub fn put(&mut self, id: Id, new_wasm_fn: WasmFn) {
-        if self.queue.len() >= CACHE_SIZE {
+        if self.queue.len() >= *CACHE_SIZE {
             if let Some(removed_id) = self.queue.pop_back() {
                 self.cached.remove(removed_id.as_str());
             }

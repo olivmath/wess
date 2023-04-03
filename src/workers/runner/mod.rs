@@ -22,6 +22,7 @@ use self::{
 };
 use super::reader::cache::Cache;
 use crate::{
+    config::CONFIG,
     database::{models::WasmFn, RocksDB},
     server::models::RunRequest,
 };
@@ -53,7 +54,8 @@ impl Runner {
     /// * A tuple containing a [`Sender<RunJob>`] and an [`Arc<Mutex<Runner>>`].
     pub fn new(db: RocksDB) -> (Sender<RunJob>, Arc<Mutex<Runner>>) {
         let compiled_wasm_cache = Arc::new(Mutex::new(CompiledWasmCache::new()));
-        let (tx, rx) = mpsc::channel::<RunJob>(100);
+        let channel_size = CONFIG.runner.channel_size;
+        let (tx, rx) = mpsc::channel::<RunJob>(channel_size);
         let engine = Engine::default();
         let cache = Cache::new();
         (

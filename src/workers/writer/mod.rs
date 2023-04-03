@@ -11,7 +11,7 @@
 pub mod models;
 
 use self::models::{WJob, WOps, WriterError};
-use crate::{database::RocksDB, logger};
+use crate::{config::CONFIG, database::RocksDB, logger};
 use std::sync::Arc;
 use tokio::sync::{
     mpsc::{self, Receiver, Sender},
@@ -29,7 +29,8 @@ impl Writer {
     ///
     /// Returns a tuple containing a [`Sender<WJob>`] and an [`Arc<Mutex<Writer>>`] instance.
     pub fn new(db: RocksDB) -> (Sender<WJob>, Arc<Mutex<Writer>>) {
-        let (tx, rx) = mpsc::channel::<WJob>(100);
+        let channel_size = CONFIG.writer.channel_size;
+        let (tx, rx) = mpsc::channel::<WJob>(channel_size);
         (tx, Arc::new(Mutex::new(Writer { rx, db })))
     }
 
