@@ -33,7 +33,7 @@ mod metrics;
 mod server;
 mod workers;
 
-use crate::config::CONFIG;
+use crate::{config::CONFIG, metrics::collect_usage_metrics};
 use database::RocksDB;
 use log::info;
 use logger::init_logger;
@@ -47,6 +47,8 @@ use workers::{reader::Reader, runner::Runner, writer::Writer};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    collect_usage_metrics().await;
+
     let config = Arc::clone(&CONFIG);
     init_logger();
 
