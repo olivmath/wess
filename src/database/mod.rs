@@ -28,17 +28,19 @@ mod errors;
 pub mod models;
 
 use self::models::WasmFn;
-use crate::config::CONFIG;
 use crate::logger;
+use crate::metrics::constants::DATABASE_OPERATION_DURATION;
+use crate::{config::CONFIG, metrics::constants::DATABASE_OPERATIONS_TOTAL};
 use errors::RocksDBError;
 use lazy_static::lazy_static;
 use log::{error, info};
 use rocksdb::{DBWithThreadMode, IteratorMode, MultiThreaded, Options, DB as DataBase};
 use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
 // Creating the single instance of RocksDB with inter-thread security.
 lazy_static! {
-    static ref DB: Arc<Mutex<DBWithThreadMode<MultiThreaded>>> = {
+    pub static ref DB: Arc<Mutex<DBWithThreadMode<MultiThreaded>>> = {
         let config = Arc::clone(&CONFIG);
         let mut options = Options::default();
         options.create_if_missing(true);
@@ -116,13 +118,22 @@ impl RocksDB {
     /// * A `Result` object that returns the key if the operation was successful,
     /// or a `RocksDBError` object if the operation failed.
     pub fn add(&mut self, key: &str, wasm: WasmFn) -> Result<String, RocksDBError> {
+        DATABASE_OPERATIONS_TOTAL.inc();
         info!(target: "wess::tx", "CREATE {key}");
-        self.db
+        let start = Instant::now();
+
+        let r = self
+            .db
             .lock()
             .unwrap()
             .put(key, serde_json::to_vec(&wasm).unwrap())
             .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
-            .and_then(|_| Ok(key.to_string()))
+            .and_then(|_| Ok(key.to_string()));
+
+        let duration = start.elapsed();
+        DATABASE_OPERATION_DURATION.observe(duration.as_secs_f64());
+
+        r
     }
 
     /// # Gets the value of a key in the RocksDB database.
@@ -136,14 +147,21 @@ impl RocksDB {
     /// * An `Option` that returns the value of the key if it exists in the database,
     /// or `None` if it doesn't.
     pub fn get(&self, key: &str) -> Option<WasmFn> {
-        if let Some(v) = self
+        DATABASE_OPERATIONS_TOTAL.inc();
+        let start = Instant::now();
+
+        let r = self
             .db
             .lock()
             .unwrap()
             .get(key)
             .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
-            .unwrap_or_default()
-        {
+            .unwrap_or_default();
+
+        let duration = start.elapsed();
+        DATABASE_OPERATION_DURATION.observe(duration.as_secs_f64());
+
+        if let Some(v) = r {
             Some(serde_json::from_slice::<WasmFn>(&v).unwrap())
         } else {
             None
@@ -158,7 +176,11 @@ impl RocksDB {
     /// Each element of the vector is an `Option` that returns the value if the key exists,
     /// or `None` if the key doesn't exist.
     pub fn all(&self) -> Vec<Option<WasmFn>> {
-        self.db
+        DATABASE_OPERATIONS_TOTAL.inc();
+        let start = Instant::now();
+
+        let r = self
+            .db
             .lock()
             .unwrap()
             .iterator(IteratorMode::Start)
@@ -169,7 +191,12 @@ impl RocksDB {
                     None
                 }
             })
-            .collect()
+            .collect();
+
+        let duration = start.elapsed();
+        DATABASE_OPERATION_DURATION.observe(duration.as_secs_f64());
+
+        r
     }
 
     /// # Updates the value of an existing key in the RocksDB database.
@@ -188,6 +215,9 @@ impl RocksDB {
     ///
     /// Returns a `RocksDBError::NotFound` error if the key doesn't exist in the database.
     pub fn upd(&mut self, key: &str, wasm: WasmFn) -> Result<String, RocksDBError> {
+        DATABASE_OPERATIONS_TOTAL.inc();
+        let start = Instant::now();
+
         let value = self
             .db
             .lock()
@@ -195,15 +225,27 @@ impl RocksDB {
             .get(key)
             .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
             .unwrap_or_default();
+
+        let duration = start.elapsed();
+        DATABASE_OPERATION_DURATION.observe(duration.as_secs_f64());
+
         info!(target: "wess::tx", "UPDATE {key}");
         if let Some(_) = value {
             let new_value = serde_json::to_vec(&wasm).unwrap();
+
+            DATABASE_OPERATIONS_TOTAL.inc();
+            let start = Instant::now();
+
             self.db
                 .lock()
                 .unwrap()
                 .put(key.as_bytes(), new_value)
                 .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
                 .unwrap();
+
+            let duration = start.elapsed();
+            DATABASE_OPERATION_DURATION.observe(duration.as_secs_f64());
+
             Ok(key.to_owned())
         } else {
             Err(logger::log_error(RocksDBError::NotFound))
@@ -225,7 +267,9 @@ impl RocksDB {
     ///
     /// Returns a `RocksDBError::NotFound` error if the key doesn't exist in the database.
     pub fn del(&mut self, key: &str) -> Result<String, RocksDBError> {
-        info!(target: "wess::tx", "DELETE {key}");
+        DATABASE_OPERATIONS_TOTAL.inc();
+        let start = Instant::now();
+
         let value = self
             .db
             .lock()
@@ -233,13 +277,25 @@ impl RocksDB {
             .get(key)
             .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
             .unwrap();
+
+        let duration = start.elapsed();
+        DATABASE_OPERATION_DURATION.observe(duration.as_secs_f64());
+
+        info!(target: "wess::tx", "DELETE {key}");
         if let Some(_) = value {
+            DATABASE_OPERATIONS_TOTAL.inc();
+            let start = Instant::now();
+
             self.db
                 .lock()
                 .unwrap()
                 .delete(key)
                 .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
                 .unwrap();
+
+            let duration = start.elapsed();
+            DATABASE_OPERATION_DURATION.observe(duration.as_secs_f64());
+
             Ok(key.to_owned())
         } else {
             Err(logger::log_error(RocksDBError::NotFound))
