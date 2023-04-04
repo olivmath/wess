@@ -84,11 +84,9 @@ async fn verify_id(req: &Request<AppState>, tx: Sender<RJob>) -> Result<String, 
 }
 
 async fn deserialize_request(req: &mut Request<AppState>) -> Result<WRequest, RequestError> {
-    Ok(req
-        .body_json::<WRequest>()
+    req.body_json::<WRequest>()
         .await
         .map_err(|e| logger::log_error(RequestError::InvalidJson(e.to_string())))
-        .unwrap())
 }
 
 fn random_id() -> String {
