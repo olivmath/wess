@@ -29,6 +29,7 @@
 mod config;
 mod database;
 mod logger;
+mod metrics;
 mod server;
 mod workers;
 
@@ -38,7 +39,10 @@ use log::info;
 use logger::init_logger;
 use server::WessServer;
 use std::{error::Error, sync::Arc};
-use tokio::{sync::Mutex, try_join};
+use tokio::{
+    sync::{mpsc, Mutex},
+    try_join,
+};
 use workers::{reader::Reader, runner::Runner, writer::Writer};
 
 #[tokio::main]
@@ -46,14 +50,16 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let config = Arc::clone(&CONFIG);
     init_logger();
 
-    info!(target:"wess", "------------------------------------------------");
-    info!(target:"wess", "Start Wess Server");
+    info!("------------------------------------------------");
+    info!("Starting Wess");
+    info!("------------------------------------------------");
 
-    info!(target:"wess", "Start RocksDB data base");
+    info!("Start RocksDB data base");
     let db = RocksDB::new();
 
-    info!(target:"wess", "Start Writer executor");
-    let (writer_tx, writer) = Writer::new(db.clone());
+    let (tx_writer, rx_writer) = mpsc::channel::<String>(1);
+    info!("Start Writer executor");
+    let (writer_tx, writer) = Writer::new(db.clone(), tx_writer);
     let writer_task = {
         let writer = Arc::clone(&writer);
         tokio::spawn(async move {
@@ -61,15 +67,15 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
     };
 
-    info!(target:"wess", "Start Reader executor");
-    let (reader_tx, reader) = Reader::new(db.clone());
+    info!("Start Reader executor");
+    let (reader_tx, reader) = Reader::new(db.clone(), rx_writer);
     let reader_task = {
         let reader = Arc::clone(&reader);
         tokio::spawn(async move {
             reader.lock().await.run().await;
         })
     };
-    info!(target:"wess", "Start Runner executor");
+    info!("Start Runner executor");
     let (runner_tx, runner) = Runner::new(db);
     let runner_task = {
         let runner = Arc::clone(&runner);
@@ -79,7 +85,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     };
 
     let addr = format!("{}:{}", config.server.address, config.server.port);
-    info!(target:"wess", "Run server on {}", &addr);
+    info!("Run server on {}", &addr);
     let wess = Arc::new(Mutex::new(WessServer::new(writer_tx, reader_tx, runner_tx)));
 
     let server_task = {
