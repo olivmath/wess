@@ -46,7 +46,7 @@ lazy_static! {
         match DataBase::open_default(&config.database.path) {
             Ok(db) => Arc::new(Mutex::new(db)),
             Err(err) => {
-                error!(target: "err","DB dont open: {err}");
+                error!(target: "wess::err","DB dont open: {err}");
                 panic!("DB dont open: {}", err);
             }
         }
@@ -59,7 +59,7 @@ lazy_static! {
         match DataBase::open_default(&config.database.dev_path) {
             Ok(db) => Arc::new(Mutex::new(db)),
             Err(err) => {
-                error!(target: "err","DEV DB dont open: {err}");
+                error!(target: "wess::err","DEV DB dont open: {err}");
                 panic!("DB dont open: {}", err);
             }
         }
@@ -116,7 +116,7 @@ impl RocksDB {
     /// * A `Result` object that returns the key if the operation was successful,
     /// or a `RocksDBError` object if the operation failed.
     pub fn add(&mut self, key: &str, wasm: WasmFn) -> Result<String, RocksDBError> {
-        info!(target: "tx", "CREATE {key}");
+        info!(target: "wess::tx", "CREATE {key}");
         self.db
             .lock()
             .unwrap()
@@ -195,7 +195,7 @@ impl RocksDB {
             .get(key)
             .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
             .unwrap_or_default();
-        info!(target: "tx", "UPDATE {key}");
+        info!(target: "wess::tx", "UPDATE {key}");
         if let Some(_) = value {
             let new_value = serde_json::to_vec(&wasm).unwrap();
             self.db
@@ -225,7 +225,7 @@ impl RocksDB {
     ///
     /// Returns a `RocksDBError::NotFound` error if the key doesn't exist in the database.
     pub fn del(&mut self, key: &str) -> Result<String, RocksDBError> {
-        info!(target: "tx", "DELETE {key}");
+        info!(target: "wess::tx", "DELETE {key}");
         let value = self
             .db
             .lock()

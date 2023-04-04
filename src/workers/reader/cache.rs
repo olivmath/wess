@@ -84,4 +84,9 @@ impl Cache {
         self.queue.push_front(id.clone());
         self.cached.insert(id, new_wasm_fn);
     }
+
+    pub fn del(&mut self, id: Id) {
+        self.cached.remove(id.as_str());
+        self.queue.retain(|key| key != id.as_str());
+    }
 }

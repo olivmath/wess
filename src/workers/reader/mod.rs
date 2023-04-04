@@ -22,9 +22,12 @@ use self::{
 };
 use crate::{config::CONFIG, database::RocksDB};
 use std::sync::Arc;
-use tokio::sync::{
-    mpsc::{self, Receiver, Sender},
-    Mutex,
+use tokio::{
+    select,
+    sync::{
+        mpsc::{self, Receiver, Sender},
+        Mutex,
+    },
 };
 
 /// Worker responsible for reading values from the database.
@@ -35,6 +38,7 @@ pub struct Reader {
     db: RocksDB,
     /// Cache instance for reading values from the memory cache.
     cache: Cache,
+    rx_writer: Receiver<String>,
 }
 
 impl Reader {
@@ -47,31 +51,46 @@ impl Reader {
     /// ## Returns
     ///
     /// A tuple containing a channel sender and an [`Arc<Mutex<Reader>>`] instance.
-    pub fn new(db: RocksDB) -> (Sender<RJob>, Arc<Mutex<Reader>>) {
+    pub fn new(db: RocksDB, rx_writer: Receiver<String>) -> (Sender<RJob>, Arc<Mutex<Reader>>) {
         let channel_size = CONFIG.reader.channel_size;
         let (tx, rx) = mpsc::channel::<RJob>(channel_size);
         let cache = Cache::new();
-        (tx, Arc::new(Mutex::new(Reader { rx, db, cache })))
+        (
+            tx,
+            Arc::new(Mutex::new(Reader {
+                rx,
+                rx_writer,
+                db,
+                cache,
+            })),
+        )
     }
 
     /// Runs the worker, listening for read requests on the channel receiver.
     pub async fn run(&mut self) {
-        while let Some(job) = self.rx.recv().await {
-            //
-            let responder = job.responder;
-            let db_instance = &self.db;
-            let id = job.id;
-            //
-            match self.cache.get(id.clone(), || db_instance.get(id.as_str())) {
-                Some(wasm_fn) => {
-                    tokio::spawn(async move { responder.send(ReadResponse::new(wasm_fn)) });
+        loop {
+            select! {
+                Some(job) = self.rx.recv() => {
+                    //
+                    let responder = job.responder;
+                    let db_instance = &self.db;
+                    let id = job.id;
+                    //
+                    match self.cache.get(id.clone(), || db_instance.get(id.as_str())) {
+                        Some(wasm_fn) => {
+                            tokio::spawn(async move { responder.send(ReadResponse::new(wasm_fn)) });
+                        }
+                        None => {
+                            tokio::spawn(
+                                async move { responder.send(ReadResponse::fail("Not found".into())) },
+                            );
+                        }
+                    };
                 }
-                None => {
-                    tokio::spawn(
-                        async move { responder.send(ReadResponse::fail("Not found".into())) },
-                    );
+                Some(id) = self.rx_writer.recv() => {
+                    self.cache.del(id)
                 }
-            };
+            }
         }
     }
 }

@@ -14,7 +14,7 @@ use core::fmt;
 
 /// # Write Job Type
 pub struct WJob {
-    pub wreq: WRequest,
+    pub wreq: Option<WRequest>,
     pub wtype: WOps,
     pub id: String,
 }
@@ -31,7 +31,7 @@ impl WJob {
     /// ## Returns
     ///
     /// A new [`WJob`] instance containing the parameters passed as arguments.
-    pub fn new(wreq: WRequest, wtype: WOps, id: String) -> Self {
+    pub fn new(wreq: Option<WRequest>, wtype: WOps, id: String) -> Self {
         Self { wreq, wtype, id }
     }
 }

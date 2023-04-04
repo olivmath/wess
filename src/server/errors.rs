@@ -4,17 +4,17 @@ use std::fmt;
 #[derive(Debug)]
 pub enum RequestError {
     /// Indicates that the JSON in the request is invalid.
-    InvalidJson(String),
     ChannelError(String),
+    InvalidJson(String),
+    InvalidId(String),
 }
 
 impl fmt::Display for RequestError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RequestError::InvalidJson(message) => write!(f, "Invalid Json: {message}"),
-            RequestError::ChannelError(message) => {
-                write!(f, "Could not send the job through the channel: {message}")
-            }
+            RequestError::ChannelError(msg) => write!(f, "Job not send: {msg}"),
+            RequestError::InvalidJson(msg) => write!(f, "Invalid Json: {msg}"),
+            RequestError::InvalidId(msg) => write!(f, "Invalid Id: {msg}"),
         }
     }
 }
