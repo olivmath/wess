@@ -1,0 +1,94 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "Wess",
+    "dateExported": "2023-04-03T14:37:41.292Z",
+    "version": "1.1",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "3a86693c-a87c-4403-8998-b7e78d226214",
+            "colId": "bb960fe1-2446-49b1-8d59-521a02012641",
+            "containerId": "",
+            "name": "New WasmFn",
+            "url": "http://127.0.0.1:7770/",
+            "method": "POST",
+            "sortNum": 10000,
+            "created": "2023-03-27T01:20:39.773Z",
+            "modified": "2023-03-31T15:11:05.953Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"wasm\": [\n    0,\n    97,\n    115,\n    109,\n    1,\n    0,\n    0,\n    0,\n    1,\n    5,\n    1,\n    96,\n    0,\n    1,\n    127,\n    3,\n    2,\n    1,\n    0,\n    5,\n    3,\n    1,\n    0,\n    16,\n    7,\n    19,\n    2,\n    6,\n    109,\n    101,\n    109,\n    111,\n    114,\n    121,\n    2,\n    0,\n    6,\n    97,\n    110,\n    115,\n    119,\n    101,\n    114,\n    0,\n    0,\n    10,\n    6,\n    1,\n    4,\n    0,\n    65,\n    43,\n    11,\n    0,\n    31,\n    4,\n    110,\n    97,\n    109,\n    101,\n    1,\n    24,\n    1,\n    0,\n    21,\n    97,\n    110,\n    115,\n    119,\n    101,\n    114,\n    46,\n    99,\n    111,\n    109,\n    109,\n    97,\n    110,\n    100,\n    95,\n    101,\n    120,\n    112,\n    111,\n    114,\n    116,\n    0,\n    104,\n    9,\n    112,\n    114,\n    111,\n    100,\n    117,\n    99,\n    101,\n    114,\n    115,\n    2,\n    8,\n    108,\n    97,\n    110,\n    103,\n    117,\n    97,\n    103,\n    101,\n    1,\n    4,\n    82,\n    117,\n    115,\n    116,\n    0,\n    12,\n    112,\n    114,\n    111,\n    99,\n    101,\n    115,\n    115,\n    101,\n    100,\n    45,\n    98,\n    121,\n    3,\n    5,\n    114,\n    117,\n    115,\n    116,\n    99,\n    29,\n    49,\n    46,\n    54,\n    56,\n    46,\n    49,\n    32,\n    40,\n    56,\n    52,\n    54,\n    48,\n    99,\n    97,\n    56,\n    50,\n    51,\n    32,\n    50,\n    48,\n    50,\n    51,\n    45,\n    48,\n    51,\n    45,\n    50,\n    48,\n    41,\n    5,\n    99,\n    108,\n    97,\n    110,\n    103,\n    6,\n    49,\n    53,\n    46,\n    48,\n    46,\n    54,\n    6,\n    119,\n    97,\n    108,\n    114,\n    117,\n    115,\n    6,\n    48,\n    46,\n    49,\n    57,\n    46,\n    48,\n    0,\n    30,\n    15,\n    116,\n    97,\n    114,\n    103,\n    101,\n    116,\n    95,\n    102,\n    101,\n    97,\n    116,\n    117,\n    114,\n    101,\n    115,\n    1,\n    43,\n    11,\n    98,\n    117,\n    108,\n    107,\n    45,\n    109,\n    101,\n    109,\n    111,\n    114,\n    121\n  ],\n  \"func\": \"answer\",\n  \"return_type\": \"i32\",\n  \"args\": []\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "c9cbe261-1dcf-4b82-997f-c6359bd3dcef",
+            "colId": "bb960fe1-2446-49b1-8d59-521a02012641",
+            "containerId": "",
+            "name": "Update WasmFn",
+            "url": "http://127.0.0.1:3000/4176b17f19f1f18f7cbfe35929a355648659f36ee622f2efad696bf4dd46820c",
+            "method": "PUT",
+            "sortNum": 20000,
+            "created": "2023-03-27T01:21:10.959Z",
+            "modified": "2023-03-27T01:24:46.414Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"wasm\": [\n    77\n  ],\n  \"func\": \"sum\",\n  \"return_type\": \"u8\",\n  \"args\": [\n    {\n      \"type\": \"u8\",\n      \"name\": \"x\"\n    },\n    {\n      \"type\": \"u8\",\n      \"name\": \"y\"\n    }\n  ]\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "d1cfce82-0cee-489f-a87f-277e847b70f8",
+            "colId": "bb960fe1-2446-49b1-8d59-521a02012641",
+            "containerId": "",
+            "name": "Delete WasmFn",
+            "url": "http://127.0.0.1:3000/",
+            "method": "DELETE",
+            "sortNum": 30000,
+            "created": "2023-03-27T01:21:51.132Z",
+            "modified": "2023-03-27T01:22:02.007Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "2186f993-5203-49db-ad8d-d3b6945b15d9",
+            "colId": "bb960fe1-2446-49b1-8d59-521a02012641",
+            "containerId": "",
+            "name": "Read WasmFn",
+            "url": "http://127.0.0.1:3000/bca44dce3bcfe611a1e959786896fd0baa5715ef019299e041b659487bcacee7",
+            "method": "GET",
+            "sortNum": 30000,
+            "created": "2023-03-27T01:22:17.935Z",
+            "modified": "2023-03-29T00:31:34.526Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "2a5aec0c-b006-45ab-b4d4-d50228708bf5",
+            "colId": "bb960fe1-2446-49b1-8d59-521a02012641",
+            "containerId": "",
+            "name": "Run Function",
+            "url": "http://127.0.0.1:7770/31c9896824f06e8be0c0d4cbb5d4693fe23de585adcd0add0c2fd668492bc68e",
+            "method": "POST",
+            "sortNum": 40000,
+            "created": "2023-03-27T01:22:34.281Z",
+            "modified": "2023-03-31T15:11:15.654Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"args\": []\n}",
+                "form": []
+            },
+            "tests": []
+        }
+    ]
+}
