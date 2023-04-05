@@ -20,6 +20,7 @@ pub struct FnTypeArg {
     /// The name of the argument.
     pub name: String,
     /// The type of the argument.
+    #[serde(rename = "type")]
     pub arg_type: String,
 }
 
