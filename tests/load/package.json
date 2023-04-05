@@ -1,0 +1,6 @@
+{
+    "name": "k6-load-qa",
+    "version": "1.0.0",
+    "main": "k6.js",
+    "license": "MIT"
+}
