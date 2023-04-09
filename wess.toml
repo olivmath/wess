@@ -8,10 +8,10 @@ dev_path = "./rocksdb/dev"
 
 [reader]
 cache_size = 1024
-channel_size = 100
+channel_size = 1024
 
 [writer]
-channel_size = 100
+channel_size = 1024
 
 [runner]
 cache_size = 1024
