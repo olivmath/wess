@@ -25,3 +25,18 @@ The main components of Wess include:
   including reader, writer, and runner.
 
 To get started with Wess
+
+
+### Tech used
+
+- Rust
+    - Tokio
+    - WebAssembly
+- Python
+    - Behave
+- JavaScript
+    - k6
+- RocksDB
+- Kubernets
+- Graphana
+- Prometheus
