@@ -26,17 +26,20 @@ The main components of Wess include:
 
 To get started with Wess
 
-
 ### Tech used
 
 - Rust
-    - Tokio
-    - WebAssembly
+    - ![Tokio](https://img.shields.io/badge/Tokio-0079AB?style=for-the-badge&logo=Tokio&logoColor=white)
+    - ![WebAssembly](https://img.shields.io/badge/WebAssembly-654FF0?style=for-the-badge&logo=WebAssembly&logoColor=white)
 - Python
-    - Behave
+    - ![Behave](https://img.shields.io/badge/Behave-444444?style=for-the-badge&logo=behave&logoColor=white)
 - JavaScript
-    - k6
+    - ![k6](https://img.shields.io/badge/k6-FFFFFF?style=for-the-badge&logo=k6&logoColor=black)
 - RocksDB
-- Kubernets
-- Graphana
+    - ![RocksDB](https://img.shields.io/badge/RocksDB-007ACC?style=for-the-badge&logo=RocksDB&logoColor=white)
+- Kubernetes
+    - ![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
+- Grafana
+    - ![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)
 - Prometheus
+    - ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
