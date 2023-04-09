@@ -25,15 +25,17 @@ The main components of Wess include:
   including reader, writer, and runner.
 
 To get started with Wess
-
 ### Tech used
 
 - Rust
+    - ![Rust](https://img.shields.io/badge/Rust-black?style=for-the-badge&logo=rust&logoColor=#E57324)
     - ![Tokio](https://img.shields.io/badge/Tokio-0079AB?style=for-the-badge&logo=Tokio&logoColor=white)
     - ![WebAssembly](https://img.shields.io/badge/WebAssembly-654FF0?style=for-the-badge&logo=WebAssembly&logoColor=white)
 - Python
+    - ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
     - ![Behave](https://img.shields.io/badge/Behave-444444?style=for-the-badge&logo=behave&logoColor=white)
 - JavaScript
+    - ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
     - ![k6](https://img.shields.io/badge/k6-FFFFFF?style=for-the-badge&logo=k6&logoColor=black)
 - RocksDB
     - ![RocksDB](https://img.shields.io/badge/RocksDB-007ACC?style=for-the-badge&logo=RocksDB&logoColor=white)
