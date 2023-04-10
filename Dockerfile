@@ -1,13 +1,30 @@
-FROM rust as builder
+FROM rust as chef
 WORKDIR /usr/wess/
-RUN apt update && apt install libclang-dev -y
-COPY Cargo.toml Cargo.lock wess.toml wess.yaml ./
+COPY Cargo.toml Cargo.lock ./
 COPY src src
-RUN cargo fetch
-RUN cargo build -r
+RUN cargo install cargo-chef
 
-FROM rust:slim
+
+FROM chef as planner
+RUN cargo chef prepare --recipe-path recipe.json
+
+
+FROM chef as cacher
+COPY --from=planner /usr/wess/recipe.json recipe.json
+RUN apt update && apt install libclang-dev -y
+RUN cargo fetch
+RUN cargo chef cook --release --recipe-path recipe.json
+
+
+FROM chef as builder 
+COPY --from=cacher /usr/wess/target /usr/wess/target
+COPY --from=cacher /usr/local/cargo /usr/local/cargo
+RUN cargo build --release --bin wess
+
+
+FROM gcr.io/distroless/cc-debian11 as runtime
 WORKDIR /usr/wess/
-COPY --from=builder /usr/wess/target/release/wess /usr/wess/wess.toml /usr/wess/wess.yaml ./
+COPY --from=builder /usr/wess/target/release/wess .
+COPY wess.toml wess.yaml ./
 EXPOSE 7770
 CMD [ "./wess" ]
