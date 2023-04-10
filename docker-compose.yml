@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  load_balancer:
+    image: nginx:alpine
+    container_name: load_balancer
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+    restart: always
+    depends_on:
+      - wess
+    ports:
+      - "80:80"
+
+  wess:
+    image: olivmath/wess
+    volumes:
+      - "./log:/usr/wess/log"
+      - "./rocksdb/prod:/usr/wess/rocksdb/prod"
+    deploy:
+      # replicas: 5
+      # update_config:
+      #   parallelism: 1
+      #   delay: 10s
+      #   order: start-first
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 50M
+        reservations:
+          cpus: "0.1"
+          memory: 20M
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    volumes:
+      - "./grafana:/var/lib/grafana"
+    ports:
+      - "3000:3000"
