@@ -1,5 +1,7 @@
 playground/
+grafana/
 rocksdb/
 target/
 log/
+
 summary.html
