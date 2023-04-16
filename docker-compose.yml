@@ -30,6 +30,7 @@ services:
         reservations:
           cpus: "0.1"
           memory: 20M
+  
   prometheus:
     image: prom/prometheus
     container_name: prometheus
