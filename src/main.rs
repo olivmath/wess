@@ -35,7 +35,7 @@ mod workers;
 
 use crate::{
     config::{CONFIG, WESS_VERSION},
-    metrics::{collect_usage_metrics, constants::WESS_BUILD_INFO},
+    metrics::{constants::WESS_BUILD_INFO, collect_hardware_metrics},
 };
 use database::RocksDB;
 use log::info;
@@ -50,7 +50,7 @@ use workers::{reader::Reader, runner::Runner, writer::Writer};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    collect_usage_metrics().await;
+    collect_hardware_metrics().await;
     WESS_BUILD_INFO.with_label_values(&[WESS_VERSION]).set(1);
 
     let config = Arc::clone(&CONFIG);

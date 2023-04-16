@@ -21,7 +21,6 @@ pub async fn collect_hardware_metrics() {
 
     tokio::spawn(async move {
         loop {
-            interval.tick().await;
             system.refresh_all();
 
             let db_size = db
@@ -34,6 +33,7 @@ pub async fn collect_hardware_metrics() {
             if let Some(process) = system.process(pid) {
                 VIRTUAL_MEMORY_USAGE.set(process.virtual_memory() as i64);
             }
+            interval.tick().await;
         }
     });
 }
