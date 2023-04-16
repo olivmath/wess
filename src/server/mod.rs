@@ -11,11 +11,12 @@
 //! - [`models`]: A module that contains the models for wrap json requests.
 
 pub mod errors;
+mod middleware;
 pub mod models;
 pub mod response;
 mod routes;
 
-use self::routes::{metrics::prometheus_metrics, middleware::RequestMetricsMiddleware};
+use self::{middleware::RequestMetricsMiddleware, routes::metrics::prometheus_metrics};
 use crate::workers::{
     reader::models::RJob,
     runner::models::RunJob,

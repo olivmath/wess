@@ -25,7 +25,6 @@
 //! passes it to the [`send_to_runner`] function to be sent to the runner thread.
 
 pub mod metrics;
-pub mod middleware;
 pub mod read_ops;
 pub mod run_ops;
 pub mod write_ops;
