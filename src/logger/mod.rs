@@ -1,4 +1,4 @@
-use crate::metrics::constants::ERROR_COUNT;
+use crate::metrics::constants::WESS_ERRORS;
 use log::error;
 use std::fmt::Display;
 
@@ -8,6 +8,6 @@ pub fn init_logger() {
 
 pub fn log_error<E: Display>(e: E) -> E {
     error!(target: "wess::err", "{e}");
-    ERROR_COUNT.inc();
+    WESS_ERRORS.inc();
     e
 }
