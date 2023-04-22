@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use crate::metrics::constants::{HTTP_REQUESTS_TOTAL, HTTP_REQUEST_LATENCY};
 use tide::{Middleware, Next, Request, Result};
 
@@ -8,10 +10,12 @@ impl<State: Clone + Send + Sync + 'static> Middleware<State> for RequestMetricsM
     async fn handle(&self, req: Request<State>, next: Next<'_, State>) -> Result {
         HTTP_REQUESTS_TOTAL.inc();
 
-        let r = HTTP_REQUEST_LATENCY
-            .observe_closure_duration(|| async { next.run(req).await })
-            .await;
+        let start_time = Instant::now();
+        let response = next.run(req).await;
+        let elapsed_time = start_time.elapsed().as_secs_f64();
 
-        Ok(r)
+        HTTP_REQUEST_LATENCY.observe(elapsed_time);
+
+        Ok(response)
     }
 }

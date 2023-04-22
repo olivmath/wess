@@ -20,10 +20,10 @@ export let options = {
         smoke: {
             executor: "constant-vus",
             vus: 10,
-            duration: '5s',
+            duration: '10s',
         },
         load: {
-            startTime: '5s',
+            startTime: '15s',
             executor: 'ramping-vus',
             startVUs: 0,
             stages: [
@@ -33,7 +33,7 @@ export let options = {
             ],
         },
         stress: {
-            startTime: '25s',
+            startTime: '45s',
             executor: "ramping-arrival-rate",
             preAllocatedVUs: 5000,
             timeUnit: "1s",
@@ -48,7 +48,7 @@ export let options = {
             ],
         },
         peak: {
-            startTime: '75s',
+            startTime: '95s',
             executor: "ramping-arrival-rate",
             preAllocatedVUs: 10000,
             timeUnit: "1s",

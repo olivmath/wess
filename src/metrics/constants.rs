@@ -1,8 +1,7 @@
 use lazy_static::lazy_static;
 use prometheus::{
-    register_counter, register_histogram, register_int_counter,
-    register_int_gauge, register_int_gauge_vec, Counter, Histogram, IntCounter,
-    IntGauge, IntGaugeVec,
+    register_counter, register_histogram, register_int_counter, register_int_gauge,
+    register_int_gauge_vec, Counter, Histogram, HistogramOpts, IntCounter, IntGauge, IntGaugeVec,
 };
 
 #[rustfmt::skip]
@@ -49,10 +48,30 @@ lazy_static! {
     ).expect("fail on registering `Total number of HTTP requests` for prometheus");
 
 
-    pub static ref HTTP_REQUEST_LATENCY: Histogram = register_histogram!(
-        "wess_http_request_latency_seconds",
-        "HTTP request latency in seconds"
-    ).expect("fail on registering `HTTP request latency in seconds` for prometheus");
+    pub static ref HTTP_REQUEST_LATENCY: Histogram = {
+        let opts = HistogramOpts::new(
+            "wess_http_request_latency_seconds",
+            "HTTP request latency in seconds"
+        ).buckets(vec![
+            0.00025, // 0.25 ms
+            0.0005, // 0.5 ms
+            0.001,  // 1 ms
+            0.0025, // 2.5 ms
+            0.005,  // 5 ms
+            0.01,   // 10 ms
+            0.025,  // 25 ms
+            0.05,   // 50 ms
+            0.1,    // 100 ms
+            0.25,   // 250 ms
+            0.5,    // 500 ms
+            1.0,    // 1 s
+            2.5,    // 2.5 s
+            5.0,    // 5 s
+            10.0,   // 10 s
+            15.0,   // 15 s
+            20.0,   // 20 s        ]);
+        register_histogram!(opts).expect("fail on registering `HTTP request latency in seconds` for prometheus")
+    };
 
 
     pub static ref VIRTUAL_MEMORY_USAGE: IntGauge = register_int_gauge!(
@@ -73,9 +92,29 @@ lazy_static! {
     ).expect("fail on registering `Total number of database operations` for prometheus");
 
 
-    pub static ref DATABASE_OPERATION_DURATION: Histogram = register_histogram!(
-        "wess_database_operation_duration_seconds",
-        "Duration of database operations in seconds"
-    ).expect("fail on registering `Duration of database operations in seconds` for prometheus");
-
+    pub static ref DATABASE_OPERATION_DURATION: Histogram =  {
+        let opts = HistogramOpts::new(
+            "wess_database_operation_duration_seconds",
+            "Duration of database operations in seconds"
+        ).buckets(vec![
+            0.00025, // 0.25 ms
+            0.0005, // 0.5 ms
+            0.001,  // 1 ms
+            0.0025, // 2.5 ms
+            0.005,  // 5 ms
+            0.01,   // 10 ms
+            0.025,  // 25 ms
+            0.05,   // 50 ms
+            0.1,    // 100 ms
+            0.25,   // 250 ms
+            0.5,    // 500 ms
+            1.0,    // 1 s
+            2.5,    // 2.5 s
+            5.0,    // 5 s
+            10.0,   // 10 s
+            15.0,   // 15 s
+            20.0,   // 20 s
+        ]);
+        register_histogram!(opts).expect("fail on registering `Duration of database operations in seconds` for prometheus")
+    };
 }

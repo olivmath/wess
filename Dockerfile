@@ -1,7 +1,6 @@
 FROM rust as chef
 WORKDIR /usr/wess/
 COPY Cargo.toml Cargo.lock ./
-COPY src src
 RUN cargo install cargo-chef
 
 
@@ -12,6 +11,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 FROM chef as cacher
 COPY --from=planner /usr/wess/recipe.json recipe.json
 RUN apt update && apt install libclang-dev -y
+RUN mkdir src && echo "fn main(){}" > src/main.rs
 RUN cargo fetch
 RUN cargo chef cook --release --recipe-path recipe.json
 
@@ -19,6 +19,8 @@ RUN cargo chef cook --release --recipe-path recipe.json
 FROM chef as builder 
 COPY --from=cacher /usr/wess/target /usr/wess/target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
+RUN rm -rf src/
+COPY src src
 RUN cargo build --release --bin wess
 
 

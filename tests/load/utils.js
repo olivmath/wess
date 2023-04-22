@@ -1,4 +1,4 @@
-const URL = "http://127.0.0.1"
+const URL = "http://127.0.0.1:80"
 const WASM = {
     func: "sum",
     return_type: "u8",
