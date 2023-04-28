@@ -69,7 +69,8 @@ lazy_static! {
             5.0,    // 5 s
             10.0,   // 10 s
             15.0,   // 15 s
-            20.0,   // 20 s        ]);
+            20.0,   // 20 s
+        ]);
         register_histogram!(opts).expect("fail on registering `HTTP request latency in seconds` for prometheus")
     };
 
