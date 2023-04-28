@@ -7,7 +7,7 @@ def text2bytes(text):
 
 
 
-@given('a WebAssembly module called "{module_name}" with function "{function_name}", with "{return_type}", with this args')
+@given('a WebAssembly module called "{module_name}" with function "{function_name}" that returns "{return_type}", with this args')
 def get_wasm(context, module_name, function_name, return_type):
     wasm_file = context.wasm_path.replace("here", module_name)
     with open(wasm_file) as wasm_module:

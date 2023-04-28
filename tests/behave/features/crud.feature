@@ -1,7 +1,7 @@
 Feature: Testing the Wess API
 
     Scenario: Creating a new module
-        Given a WebAssembly module called "the_answer" with function "the_answer", with "i32", with this args
+        Given a WebAssembly module called "the_answer" with function "the_answer", that returns "i32", with this args
             """
             [
                 {
