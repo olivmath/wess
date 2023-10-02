@@ -1,47 +1,21 @@
 refresh_rate: 30 seconds
 appenders:
-  wess:
+  stdout:
     kind: console
-    encoder:
-      pattern: "{d(%Y-%m-%dT%H:%M:%S)(local)} {l} - {m}{n}"
-  tx:
+  wess:
     kind: file
-    path: "./log/tx.log"
+    path: "./log/wess.log"
     encoder:
-      pattern: "{d(%Y-%m-%dT%H:%M:%S)(local)} {l} - {m}{n}"
-  run:
-    kind: file
-    path: "./log/run.log"
-    encoder:
-      pattern: "{d(%Y-%m-%dT%H:%M:%S)(local)} {l} - {m}{n}"
-  err:
-    kind: file
-    path: "./log/err.log"
-    encoder:
-      pattern: "{d(%Y-%m-%dT%H:%M:%S)(local)} {l} - {m}{n}"
-  server:
-    kind: file
-    path: "./log/server.log"
-    encoder:
-      pattern: "{d(%Y-%m-%dT%H:%M:%S)(local)} {l} - {m}{n}"
+      pattern: "{d(%Y-%m-%dT%H:%M:%S)(local)} | {l} {t} | {f}:{L} - {m}{n}"
+
 root:
   level: info
   appenders:
-    - wess
+    - stdout
+
 loggers:
-  wess::tx:
-    level: trace
-    appenders:
-      - tx
-  wess::run:
-    level: trace
-    appenders:
-      - run
-  wess::err:
-    level: error
-    appenders:
-      - err
-  tide:
+  wess:
     level: info
     appenders:
-      - server
+      - wess
+    additive: false
