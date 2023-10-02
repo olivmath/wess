@@ -34,7 +34,10 @@ pub async fn send_to_runner(
     tx.send(run_job).await.unwrap();
 
     match done_rx.await {
-        Ok(response) => respond(response).await,
+        Ok(response) => match response {
+            RunResponse::Success(r) => respond(r).await,
+            RunResponse::Fail(f) => respond_with_error(f.to_string()).await,
+        },
         Err(e) => {
             logger::log_error(RequestError::ChannelError(e.to_string()));
             respond_with_error(e.to_string()).await

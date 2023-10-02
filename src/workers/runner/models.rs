@@ -36,13 +36,13 @@ impl RunJob {
 /// # Run Response Type
 #[derive(Debug, Serialize)]
 pub enum RunResponse {
-    Success(String),
+    Success(serde_json::Value),
     Fail(RunnerError),
 }
 
 impl RunResponse {
     /// # Success: [`String`]
-    pub fn new(r: String) -> Self {
+    pub fn new(r: serde_json::Value) -> Self {
         RunResponse::Success(r)
     }
 
@@ -66,15 +66,20 @@ impl RunResponse {
 #[derive(Serialize, Debug)]
 pub enum RunnerError {
     InstantiateFunctionError(String, String),
+    TypeMismatchError(String, String),
     FunctionExecutionError(String),
     InitializingError(String),
     CompilingError(String),
     WasmNotFound,
+    ArgsError,
 }
 
 impl fmt::Display for RunnerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            RunnerError::TypeMismatchError(expect, passed) => {
+                write!(f, "Type mismatch error: expect: {}, passed: {}", expect, passed)
+            },
             RunnerError::InstantiateFunctionError(name, err) => {
                 write!(f, "Error instantiating function {}: {}", name, err)
             }
@@ -88,6 +93,7 @@ impl fmt::Display for RunnerError {
                 write!(f, "Error compiling wasm module: {}", err)
             }
             RunnerError::WasmNotFound => write!(f, "Wasm module not found"),
+            RunnerError::ArgsError => write!(f, "Args parsing wrong"),
         }
     }
 }
