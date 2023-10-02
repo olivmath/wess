@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  api:
+    build:
+      context: .
+    volumes:
+      - rocksdb:/caminho/para/dados
+      - logs:/caminho/para/logs
+    ports:
+      - "7770:7770"
+    command: [ "cargo", "r", "-r"]
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    ports:
+      - "3000:3000"
+
+volumes:
+  rocksdb:
+  logs:
+  grafana-storage:
