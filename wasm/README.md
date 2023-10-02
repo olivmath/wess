@@ -59,6 +59,7 @@ fn main() {
 **Now build your Rust function to Wasm function:**
 
 ```shell
+cargo install cargo-wasi
 cargo wasi build -r
 ```
 
@@ -90,7 +91,7 @@ wasmtime run --invoke the_answer the_answer.wasm
 **Run this command to convert your .wasm to list of bytes in `BYTES_RESULT.txt`:**
 
 ```
-od -An -v -t uC the_answer.wasm \
+od -An -v -t uC *.wasm \
 | tr -s ' ' \
 | tr ' ' ',' \
 | tr -d '\n' \
