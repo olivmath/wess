@@ -10,21 +10,21 @@
 //!
 //! - [`RunRequest`]: Represents a request to run a WebAssembly function.
 
-use crate::server::models::RunRequest;
 use serde::Serialize;
 use std::fmt;
 use tokio::sync::oneshot::Sender;
+use wasmer::Value;
 
 /// Run Job Type
 #[derive(Debug)]
 pub struct RunJob {
     pub responder: Sender<RunResponse>,
-    pub args: RunRequest,
+    pub args: Vec<Value>,
     pub id: String,
 }
 
 impl RunJob {
-    pub fn new(responder: Sender<RunResponse>, args: RunRequest, id: String) -> Self {
+    pub fn new(responder: Sender<RunResponse>, args: Vec<Value>, id: String) -> Self {
         Self {
             responder,
             args,
@@ -66,20 +66,15 @@ impl RunResponse {
 #[derive(Serialize, Debug)]
 pub enum RunnerError {
     InstantiateFunctionError(String, String),
-    TypeMismatchError(String, String),
     FunctionExecutionError(String),
     InitializingError(String),
     CompilingError(String),
     WasmNotFound,
-    ArgsError,
 }
 
 impl fmt::Display for RunnerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RunnerError::TypeMismatchError(expect, passed) => {
-                write!(f, "Type mismatch error: expect: {}, passed: {}", expect, passed)
-            },
             RunnerError::InstantiateFunctionError(name, err) => {
                 write!(f, "Error instantiating function {}: {}", name, err)
             }
@@ -93,7 +88,6 @@ impl fmt::Display for RunnerError {
                 write!(f, "Error compiling wasm module: {}", err)
             }
             RunnerError::WasmNotFound => write!(f, "Wasm module not found"),
-            RunnerError::ArgsError => write!(f, "Args parsing wrong"),
         }
     }
 }
