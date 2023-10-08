@@ -1,20 +1,20 @@
 use crate::{
+    database::models::WasmModule,
     logger,
     server::{
         errors::RequestError,
-        models::WRequest,
         response::{respond, respond_with_error},
         AppState,
     },
     workers::{
-        reader::models::{RJob, ReadResponse},
-        writer::models::{WJob, WOps},
+        reader::models::{ReadJob, ReadResponse},
+        writer::models::{WriteJob, WriteOps},
     },
 };
 use async_std::task;
 use rand::Rng;
 use sha256::digest;
-use tide::{Error, Request, Response};
+use tide::{Error, Request, Response, StatusCode};
 use tokio::sync::{mpsc::Sender, oneshot};
 
 /// # Handler function for write operations.
@@ -22,69 +22,94 @@ use tokio::sync::{mpsc::Sender, oneshot};
 /// ## Arguments
 ///
 /// * `req` - The [`Request`] object containing the write operation to perform.
-/// * `wtype` - The type of write operation to perform.
+/// * `write_type` - The type of write operation to perform.
 ///
 /// # Returns
 ///
 /// A [`Result`] containing the [`Response`] object.
-pub async fn make_write_op(mut req: Request<AppState>, wtype: WOps) -> Result<Response, Error> {
-    let tx = req.state().reader_tx.clone();
-    match wtype {
-        WOps::Create => {
+pub async fn make_write_op(
+    mut req: Request<AppState>,
+    write_type: WriteOps,
+) -> Result<Response, Error> {
+    let reader_tx = req.state().reader_tx.clone();
+    match write_type {
+        WriteOps::Create => {
             let id = random_id();
-            let wreq = deserialize_request(&mut req).await.unwrap();
-            perform_op(Some(wreq), id, wtype, req.state().writer_tx.clone()).await
-        }
-        WOps::Update => match verify_id(&req, tx).await {
-            Ok(id) => {
-                let wreq = deserialize_request(&mut req).await.unwrap();
-                perform_op(Some(wreq), id, wtype, req.state().writer_tx.clone()).await
+            match deserialize_request(&mut req).await {
+                Ok(write_request) => {
+                    send_to_writer(
+                        Some(write_request),
+                        id,
+                        write_type,
+                        req.state().writer_tx.clone(),
+                    )
+                    .await
+                }
+                Err(e) => respond_with_error(e.to_string(), StatusCode::BadRequest).await,
             }
-            Err(e) => respond_with_error(e.to_string()).await,
+        }
+        WriteOps::Update => match verify_id(&req, reader_tx).await {
+            Ok(id) => match deserialize_request(&mut req).await {
+                Ok(write_request) => {
+                    send_to_writer(
+                        Some(write_request),
+                        id,
+                        write_type,
+                        req.state().writer_tx.clone(),
+                    )
+                    .await
+                }
+                Err(e) => respond_with_error(e.to_string(), StatusCode::BadRequest).await,
+            },
+            Err(e) => respond_with_error(e.to_string(), StatusCode::BadRequest).await,
         },
-        WOps::Delete => match verify_id(&req, tx).await {
-            Ok(id) => perform_op(None, id, wtype, req.state().writer_tx.clone()).await,
-            Err(e) => respond_with_error(e.to_string()).await,
+        WriteOps::Delete => match verify_id(&req, reader_tx).await {
+            Ok(id) => send_to_writer(None, id, write_type, req.state().writer_tx.clone()).await,
+            Err(e) => respond_with_error(e.to_string(), StatusCode::BadRequest).await,
         },
     }
 }
-async fn perform_op(
-    wreq: Option<WRequest>,
+async fn send_to_writer(
+    write_request: Option<WasmModule>,
     id: String,
-    wtype: WOps,
-    tx: Sender<WJob>,
+    write_type: WriteOps,
+    tx: Sender<WriteJob>,
 ) -> Result<Response, Error> {
-    let wjob = WJob::new(wreq, wtype, id.clone());
+    let write_job = WriteJob::new(write_request, write_type, id.clone());
 
     task::spawn(async move {
-        if let Err(e) = tx.send(wjob).await {
+        if let Err(e) = tx.send(write_job).await {
             logger::log_error(RequestError::ChannelError(e.to_string()));
         }
     });
 
-    respond(id).await
+    respond(serde_json::json!({
+        "id": id
+    }))
+    .await
 }
-async fn verify_id(req: &Request<AppState>, tx: Sender<RJob>) -> Result<String, RequestError> {
+
+async fn verify_id(
+    req: &Request<AppState>,
+    reader_tx: Sender<ReadJob>,
+) -> Result<String, RequestError> {
     let id = req.param("id").unwrap();
     let (done_tx, done_rx) = oneshot::channel::<ReadResponse>();
-    let rjob = RJob::new(done_tx, id.to_string());
+    let read_job = ReadJob::new(done_tx, id.to_string());
 
-    tx.send(rjob).await.unwrap();
+    reader_tx.send(read_job).await.unwrap();
 
     match done_rx.await {
         Ok(response) => match response {
             ReadResponse::Success(_) => Ok(id.to_string()),
             ReadResponse::Fail(e) => Err(RequestError::InvalidId(e)),
         },
-        Err(e) => {
-            logger::log_error(RequestError::ChannelError(e.to_string()));
-            Err(RequestError::ChannelError(e.to_string()))
-        }
+        Err(e) => Err(logger::log_error(RequestError::ChannelError(e.to_string()))),
     }
 }
 
-async fn deserialize_request(req: &mut Request<AppState>) -> Result<WRequest, RequestError> {
-    req.body_json::<WRequest>()
+async fn deserialize_request(req: &mut Request<AppState>) -> Result<WasmModule, RequestError> {
+    req.body_json::<WasmModule>()
         .await
         .map_err(|e| logger::log_error(RequestError::InvalidJson(e.to_string())))
 }
