@@ -3,9 +3,9 @@
 //! This module contains the following types:
 //!
 //! - [`Wasm`]: A type alias for a [`Vec<u8>`] representing WebAssembly bytecode.
-//! - [`FnTypeArg`]: A struct representing an argument for a WebAssembly function, containing a name and a type.
+//! - [`TypeArg`]: A struct representing an argument for a WebAssembly function, containing a name and a type.
 //! - [`WasmMetadata`]: A struct representing metadata associated with a WebAssembly function, containing its name, return type and a vector of function argument types.
-//! - [`WasmFn`]: A struct representing a WebAssembly function, containing its bytecode and metadata.
+//! - [`WasmModule`]: A struct representing a WebAssembly function, containing its bytecode and metadata.
 //!
 //! All types are serializable and deserializable through serde.
 
@@ -14,30 +14,13 @@ use serde::{Deserialize, Serialize};
 /// # Represents WebAssembly bytecode.
 pub type Wasm = Vec<u8>;
 
-/// # Represents an argument for a WebAssembly function.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
-pub struct FnTypeArg {
-    /// The name of the argument.
-    pub name: String,
-    /// The type of the argument.
-    #[serde(rename = "type")]
-    pub arg_type: String,
-}
-
-impl FnTypeArg {
-    /// # Creates a new instance of the [`FnTypeArg`] structure.
-    ///
-    /// ## Arguments
-    ///
-    /// * `name` - A string slice that represents the name of the argument.
-    /// * `arg_type` - A string slice that represents the type of the argument.
-    ///
-    /// ## Returns
-    ///
-    /// * An instance of [`FnTypeArg`].
-    pub fn new(name: String, arg_type: String) -> Self {
-        Self { name, arg_type }
-    }
+pub enum TypeArg {
+    #[default]
+    I32,
+    I64,
+    F32,
+    F64,
 }
 
 /// # Represents metadata associated with a WebAssembly function.
@@ -46,11 +29,22 @@ pub struct WasmMetadata {
     // pub owner: Vec<u8>,
     // pub signature: Vec<u8>,
     /// The name of the function.
-    pub func: String,
+    #[serde(rename = "functionName")]
+    pub function_name: String,
     /// The return type of the function.
-    pub return_type: String,
+    #[serde(rename = "returnType")]
+    pub return_type: TypeArg,
     /// A vector of function argument types.
-    pub args: Vec<Option<FnTypeArg>>,
+    pub args: Vec<Option<TypeArg>>,
+}
+
+/// # Represents a WebAssembly function.
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
+pub struct WasmModule {
+    /// The WebAssembly bytecode.
+    pub wasm: Wasm,
+    /// The metadata associated with the function.
+    pub metadata: WasmMetadata,
 }
 
 impl WasmMetadata {
@@ -60,31 +54,22 @@ impl WasmMetadata {
     ///
     /// * `func` - A string slice that represents the name of the function.
     /// * `return_type` - A string slice that represents the return type of the function.
-    /// * `args` - A vector of [`Option<FnTypeArg>`] objects that represent the function argument types.
+    /// * `args` - A vector of [`Option<TypeArg>`] objects that represent the function argument types.
     ///
     /// ## Returns
     ///
     /// * An instance of [`WasmMetadata`].
-    pub fn new(func: String, return_type: String, args: Vec<Option<FnTypeArg>>) -> Self {
+    pub fn new(function_name: String, return_type: TypeArg, args: Vec<Option<TypeArg>>) -> Self {
         Self {
-            func,
+            function_name,
             return_type,
             args,
         }
     }
 }
 
-/// # Represents a WebAssembly function.
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
-pub struct WasmFn {
-    /// The WebAssembly bytecode.
-    pub wasm: Wasm,
-    /// The metadata associated with the function.
-    pub metadata: WasmMetadata,
-}
-
-impl WasmFn {
-    /// # Creates a new instance of the [`WasmFn`] structure.
+impl WasmModule {
+    /// # Creates a new instance of the [`WasmModule`] structure.
     ///
     /// ## Arguments
     ///
@@ -93,17 +78,17 @@ impl WasmFn {
     ///
     /// ## Returns
     ///
-    /// * An instance of [`WasmFn`].
+    /// * An instance of [`WasmModule`].
     pub fn new(wasm: Wasm, metadata: WasmMetadata) -> Self {
         Self { wasm, metadata }
     }
-    /// # Convert the [`Wasm`] bytecode of a [`WasmFn`] instance to a byte slice.
+    /// # Convert the [`Wasm`] bytecode of a [`WasmModule`] instance to a byte slice.
     ///
-    /// This method returns the WebAssembly bytecode of the [`WasmFn`] instance as a byte slice.
+    /// This method returns the WebAssembly bytecode of the [`WasmModule`] instance as a byte slice.
     ///
     /// ## Returns
     ///
-    /// * A byte slice `&[u8]` representing the WebAssembly bytecode of the [`WasmFn`] instance.
+    /// * A byte slice `&[u8]` representing the WebAssembly bytecode of the [`WasmModule`] instance.
     pub fn to_binary(&self) -> &[u8] {
         self.wasm.as_slice()
     }

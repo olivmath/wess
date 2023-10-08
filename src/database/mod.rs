@@ -3,22 +3,22 @@
 //! This module contains the following main components:
 //!
 //! - [`RocksDB`]: A struct that provides a simple API for interacting with a RocksDB database.
-//! - [`WasmFn`]: A struct representing a WebAssembly function.
+//! - [`WasmModule`]: A struct representing a WebAssembly function.
 //! - [`RocksDBError`]: An enumeration of potential errors that can be encountered while working with a RocksDB database.
 //!
 //! # Examples
 //!
 //! ```no_run
 //! use database::RocksDB;
-//! use database::models::WasmFn;
+//! use database::models::WasmModule;
 //!
 //! let mut db = RocksDB::new();
-//! let wasm = WasmFn::new("example_fn", "example.wasm");
+//! let wasm = WasmModule::new("example_fn", "example.wasm");
 //!
 //! let key = "example_key";
 //! let _ = db.add(key, wasm).unwrap();
-//! let wasm_fn = db.get(key).unwrap();
-//! println!("{:?}", wasm_fn);
+//! let wasm_module = db.get(key).unwrap();
+//! println!("{:?}", wasm_module);
 //! let _ = db.del(key).unwrap();
 //! ```
 
@@ -27,7 +27,7 @@
 mod errors;
 pub mod models;
 
-use self::models::WasmFn;
+use self::models::WasmModule;
 use crate::logger;
 use crate::metrics::constants::DATABASE_OPERATION_DURATION;
 use crate::{config::CONFIG, metrics::constants::DATABASE_OPERATIONS_TOTAL};
@@ -111,13 +111,13 @@ impl RocksDB {
     /// ## Arguments
     ///
     /// * `key` - A string slice that represents the key to be added.
-    /// * `wasm` - A `WasmFn` object that represents the value to be added.
+    /// * `wasm` - A `WasmModule` object that represents the value to be added.
     ///
     /// ## Returns
     ///
     /// * A `Result` object that returns the key if the operation was successful,
     /// or a `RocksDBError` object if the operation failed.
-    pub fn add(&mut self, key: &str, wasm: WasmFn) -> Result<String, RocksDBError> {
+    pub fn add(&mut self, key: &str, wasm: WasmModule) -> Result<String, RocksDBError> {
         DATABASE_OPERATIONS_TOTAL.inc();
         info!(target: "wess::tx", "CREATE {key}");
         let start = Instant::now();
@@ -146,7 +146,7 @@ impl RocksDB {
     ///
     /// * An `Option` that returns the value of the key if it exists in the database,
     /// or `None` if it doesn't.
-    pub fn get(&self, key: &str) -> Option<WasmFn> {
+    pub fn get(&self, key: &str) -> Option<WasmModule> {
         DATABASE_OPERATIONS_TOTAL.inc();
         let start = Instant::now();
 
@@ -162,7 +162,7 @@ impl RocksDB {
         DATABASE_OPERATION_DURATION.observe(duration.as_secs_f64());
 
         if let Some(v) = r {
-            Some(serde_json::from_slice::<WasmFn>(&v).unwrap())
+            Some(serde_json::from_slice::<WasmModule>(&v).unwrap())
         } else {
             None
         }
@@ -175,7 +175,7 @@ impl RocksDB {
     /// * A `Vec` that contains all the key-value pairs in the database.
     /// Each element of the vector is an `Option` that returns the value if the key exists,
     /// or `None` if the key doesn't exist.
-    pub fn all(&self) -> Vec<Option<WasmFn>> {
+    pub fn all(&self) -> Vec<Option<WasmModule>> {
         DATABASE_OPERATIONS_TOTAL.inc();
         let start = Instant::now();
 
@@ -204,7 +204,7 @@ impl RocksDB {
     /// ## Arguments
     ///
     /// * `key` - A string slice that represents the key to be updated.
-    /// * `wasm` - A `WasmFn` object that represents the new value to be set.
+    /// * `wasm` - A `WasmModule` object that represents the new value to be set.
     ///
     /// ## Returns
     ///
@@ -214,7 +214,7 @@ impl RocksDB {
     /// # Errors
     ///
     /// Returns a `RocksDBError::NotFound` error if the key doesn't exist in the database.
-    pub fn upd(&mut self, key: &str, wasm: WasmFn) -> Result<String, RocksDBError> {
+    pub fn upd(&mut self, key: &str, wasm: WasmModule) -> Result<String, RocksDBError> {
         DATABASE_OPERATIONS_TOTAL.inc();
         let start = Instant::now();
 
@@ -306,36 +306,36 @@ impl RocksDB {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use models::WasmFn;
+    use models::WasmModule;
 
     #[test]
     fn test_add_and_get() {
         let mut db = RocksDB::dev();
-        let wasm = WasmFn::default();
+        let wasm = WasmModule::default();
         let key = "example_key";
 
         let _ = db.add(key, wasm.clone()).unwrap();
-        let wasm_fn = db.get(key).unwrap();
+        let wasm_module = db.get(key).unwrap();
 
-        assert_eq!(wasm_fn, wasm);
+        assert_eq!(wasm_module, wasm);
     }
 
     #[test]
     fn test_upd_and_del() {
         let mut db = RocksDB::dev();
-        let wasm = WasmFn::default();
-        let wasm_updated = WasmFn::default();
+        let wasm = WasmModule::default();
+        let wasm_updated = WasmModule::default();
         let key = "example_key";
 
         let _ = db.add(key, wasm).unwrap();
         let _ = db.upd(key, wasm_updated.clone()).unwrap();
-        let wasm_fn = db.get(key).unwrap();
+        let wasm_module = db.get(key).unwrap();
 
-        assert_eq!(wasm_fn, wasm_updated);
+        assert_eq!(wasm_module, wasm_updated);
 
         let _ = db.del(key).unwrap();
-        let wasm_fn = db.get(key);
+        let wasm_module = db.get(key);
 
-        assert_eq!(wasm_fn, None);
+        assert_eq!(wasm_module, None);
     }
 }
