@@ -11,15 +11,14 @@
 //! - [`models`]: A module that contains the models for wrap json requests.
 
 pub mod errors;
-pub mod models;
 pub mod response;
 mod routes;
 
 use self::routes::{metrics::prometheus_metrics, middleware::RequestMetricsMiddleware};
 use crate::workers::{
-    reader::models::RJob,
+    reader::models::ReadJob,
     runner::models::RunJob,
-    writer::models::{WJob, WOps},
+    writer::models::{WriteJob, WriteOps},
 };
 use routes::{read_ops::make_read_op, run_ops::make_run_op, write_ops::make_write_op};
 use tide::Server;
@@ -30,8 +29,8 @@ use tokio::sync::mpsc::Sender;
 /// reading and running jobs.
 #[derive(Clone)]
 pub struct AppState {
-    pub writer_tx: Sender<WJob>,
-    pub reader_tx: Sender<RJob>,
+    pub writer_tx: Sender<WriteJob>,
+    pub reader_tx: Sender<ReadJob>,
     pub runner_tx: Sender<RunJob>,
 }
 
@@ -46,16 +45,16 @@ impl WessServer {
     ///
     /// ## Arguments
     ///
-    /// * `writer_tx` - A `Sender<WJob>` for sending jobs to the writer worker.
-    /// * `reader_tx` - A `Sender<RJob>` for sending jobs to the reader worker.
+    /// * `writer_tx` - A `Sender<WriteJob>` for sending jobs to the writer worker.
+    /// * `reader_tx` - A `Sender<ReadJob>` for sending jobs to the reader worker.
     /// * `runner_tx` - A `Sender<RunJob>` for sending jobs to the runner worker.
     ///
     /// ## Returns
     ///
     /// * An instance of `WessServer`.
     pub fn new(
-        writer_tx: Sender<WJob>,
-        reader_tx: Sender<RJob>,
+        writer_tx: Sender<WriteJob>,
+        reader_tx: Sender<ReadJob>,
         runner_tx: Sender<RunJob>,
     ) -> Self {
         let mut app = tide::with_state(AppState {
@@ -69,10 +68,10 @@ impl WessServer {
 
         // Write ops
         app.at("/")
-            .post(|req| async { make_write_op(req, WOps::Create).await });
+            .post(|req| async { make_write_op(req, WriteOps::Create).await });
         app.at("/:id")
-            .put(|req| async { make_write_op(req, WOps::Update).await })
-            .delete(|req| async { make_write_op(req, WOps::Delete).await });
+            .put(|req| async { make_write_op(req, WriteOps::Update).await })
+            .delete(|req| async { make_write_op(req, WriteOps::Delete).await });
 
         // Read ops
         app.at("/:id").get(|req| async { make_read_op(req).await });
