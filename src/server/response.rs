@@ -11,8 +11,8 @@ use tide::{Error, Response, StatusCode};
 /// ## Returns
 ///
 /// * A [`Result`] containing the error response.
-pub async fn respond_with_error(message: String) -> Result<Response, Error> {
-    Ok(Response::builder(StatusCode::InternalServerError)
+pub async fn respond_with_error(message: String, status: StatusCode) -> Result<Response, Error> {
+    Ok(Response::builder(status)
         .body(json!({ "message": message }))
         .build())
 }
