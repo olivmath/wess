@@ -6,7 +6,10 @@ pub fn init_logger() {
     log4rs::init_file("wess.yaml", Default::default()).unwrap();
 }
 
-pub fn log_error<E: Display>(e: E) -> E {
+pub fn log_error<E>(e: E) -> E
+where
+    E: Display,
+{
     error!(target: "wess::err", "{e}");
     ERROR_COUNT.inc();
     e
