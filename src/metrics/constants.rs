@@ -50,4 +50,14 @@ lazy_static! {
         "wess_database_size_bytes",
         "Size of the database in bytes"
     ).unwrap();
+
+    pub static ref WASM_COMPILER_TIME: Histogram = register_histogram!(
+        "wess_wasm_compiler_time_seconds",
+        "Compiler Wasm time in seconds"
+    ).unwrap();
+
+    pub static ref WASM_EXECUTION_TIME: Histogram = register_histogram!(
+        "wess_wasm_execution_time_seconds",
+        "Execution Wasm function time in seconds"
+    ).unwrap();
 }
