@@ -2,25 +2,25 @@
 //!
 //! This module contains the following types:
 //!
-//! - [`RJob`]: A struct representing a read job, containing a channel to send the read response and the ID of the wasm function to be read.
+//! - [`ReadJob`]: A struct representing a read job, containing a channel to send the read response and the ID of the wasm function to be read.
 //! - [`ReadResponse`]: An enum representing the response of a read operation. It can either contain the retrieved wasm function, or a message indicating that the function was not found.
 //!
 //! The `models` module depends on the following modules:
 //!
-//! - [`WasmFn`]: Represents a WebAssembly function.
+//! - [`WasmModule`]: Represents a WebAssembly function.
 
-use crate::database::models::WasmFn;
+use crate::database::models::WasmModule;
 use serde::Serialize;
 use tokio::sync::oneshot::Sender;
 
 /// # Read Job Type
 #[derive(Debug)]
-pub struct RJob {
+pub struct ReadJob {
     pub responder: Sender<ReadResponse>,
     pub id: String,
 }
 
-impl RJob {
+impl ReadJob {
     /// # Creates a new read job
     ///
     /// ## Arguments
@@ -35,18 +35,18 @@ impl RJob {
 /// # Read Response Type
 #[derive(Serialize, Debug)]
 pub enum ReadResponse {
-    Success(WasmFn),
+    Success(WasmModule),
     Fail(String),
 }
 
 impl ReadResponse {
-    /// # Creates a success response with the retrieved [`WasmFn`]
+    /// # Creates a success response with the retrieved [`WasmModule`]
     ///
     /// ## Arguments
     ///
-    /// * `wasm_fn` - Retrieved wasm function
-    pub fn new(wasm_fn: WasmFn) -> Self {
-        ReadResponse::Success(wasm_fn)
+    /// * `wasm_module` - Retrieved wasm function
+    pub fn new(wasm_module: WasmModule) -> Self {
+        ReadResponse::Success(wasm_module)
     }
 
     /// # Creates a fail response with a message

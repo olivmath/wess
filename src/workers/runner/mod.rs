@@ -22,14 +22,14 @@ use self::{
 };
 use crate::{
     config::CONFIG,
-    database::{models::WasmFn, RocksDB},
-    server::models::RunRequest,
+    database::{models::WasmModule, RocksDB},
 };
 use std::sync::Arc;
 use tokio::sync::{
     mpsc::{self, Receiver, Sender},
     Mutex,
 };
+use wasmer::Value;
 
 /// An async executor for running WebAssembly functions.
 pub struct Runner {
@@ -63,7 +63,7 @@ impl Runner {
             let id = job.id;
             //
             match db.get(id.as_str()) {
-                Some(wasm_fn) => match self.run_function(args, wasm_fn).await {
+                Some(wasm_module) => match self.run_function(&args, wasm_module).await {
                     Ok(result) => {
                         tokio::spawn(async move { responder.send(result) });
                     }
@@ -86,7 +86,7 @@ impl Runner {
     ///
     /// * `cache` - A mutable reference to a [`CompiledWasmCache`] for caching the compiled WebAssembly modules.
     /// * `args` - A [`RunRequest`] object that represents the function arguments.
-    /// * `wasm_fn` - A [`WasmFn`] object that represents the WebAssembly function.
+    /// * `wasm_module` - A [`WasmModule`] object that represents the WebAssembly function.
     /// * `engine` - A reference to a [`wasmtime::Engine`] object for running the WebAssembly module.
     /// * `id` - A [`String`] representing the ID of the WebAssembly function.
     ///
@@ -95,10 +95,10 @@ impl Runner {
     /// * A [`Result<RunResponse, RunnerError>`] containing either the function's result or an error.
     pub async fn run_function(
         &self,
-        args: RunRequest,
-        wasm_fn: WasmFn,
+        args: &[Value],
+        wasm_module: WasmModule,
     ) -> Result<RunResponse, RunnerError> {
-        let mut runtime = Runtime::new(wasm_fn.clone());
+        let mut runtime = Runtime::new(wasm_module.clone());
         match runtime.run(args) {
             Ok(r) => Ok(RunResponse::new(r)),
             Err(e) => Err(e),

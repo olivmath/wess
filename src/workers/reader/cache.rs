@@ -10,7 +10,7 @@
 //!
 //! The cache is generic and can be used to store any type of data.
 
-use crate::{config::CONFIG, database::models::WasmFn};
+use crate::{config::CONFIG, database::models::WasmModule};
 use lazy_static::lazy_static;
 use std::collections::{HashMap, VecDeque};
 
@@ -23,7 +23,7 @@ type Id = String;
 /// An in-memory cache with a Least Recently Used (LRU) eviction strategy.
 pub struct Cache {
     /// A HashMap to store the cached data.
-    cached: HashMap<Id, WasmFn>,
+    cached: HashMap<Id, WasmModule>,
     /// A VecDeque to maintain the order of recently used items.
     queue: VecDeque<Id>,
 }
@@ -50,13 +50,13 @@ impl Cache {
     ///
     /// ## Returns
     ///
-    /// * An [`Option<WasmFn>`] containing the requested item or [`None`] if not found.
-    pub fn get<F>(&mut self, id: Id, f: F) -> Option<WasmFn>
+    /// * An [`Option<WasmModule>`] containing the requested item or [`None`] if not found.
+    pub fn get<F>(&mut self, id: Id, f: F) -> Option<WasmModule>
     where
-        F: FnOnce() -> Option<WasmFn>,
+        F: FnOnce() -> Option<WasmModule>,
     {
         match self.cached.get(id.as_str()) {
-            Some(wasm_fn) => Some(wasm_fn.clone()),
+            Some(wasm_module) => Some(wasm_module.clone()),
             None => match f() {
                 Some(new_wasm_fn) => {
                     self.put(id, new_wasm_fn.clone());
@@ -75,7 +75,7 @@ impl Cache {
     /// * `new_wasm_fn` - The item to be inserted.
     ///
     /// This method also handles cache eviction based on the LRU strategy.
-    pub fn put(&mut self, id: Id, new_wasm_fn: WasmFn) {
+    pub fn put(&mut self, id: Id, new_wasm_fn: WasmModule) {
         if self.queue.len() >= *CACHE_SIZE {
             if let Some(removed_id) = self.queue.pop_back() {
                 self.cached.remove(removed_id.as_str());

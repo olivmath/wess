@@ -2,42 +2,46 @@
 //!
 //! This module contains the following types:
 //!
-//! - [`WJob`]: A struct representing a write job, containing a [`WRequest`], a write operation type [`WOps`], and an ID.
-//! - [`WOps`]: An enum representing a write operation type. It can be either create, update or delete.
+//! - [`WriteJob`]: A struct representing a write job, containing a [`WasmModule`], a write operation type [`WriteOps`], and an ID.
+//! - [`WriteOps`]: An enum representing a write operation type. It can be either create, update or delete.
 //!
 //! The `models` module depends on the following modules:
 //!
-//! - [`WRequest`]: Represents a write request type.
+//! - [`WasmModule`]: Represents a write request type.
 
-use crate::server::models::WRequest;
+use crate::database::models::WasmModule;
 use core::fmt;
 
 /// # Write Job Type
-pub struct WJob {
-    pub wreq: Option<WRequest>,
-    pub wtype: WOps,
+pub struct WriteJob {
+    pub write_req: Option<WasmModule>,
+    pub write_type: WriteOps,
     pub id: String,
 }
 
-impl WJob {
-    /// # Creates a new [`WJob`] instance with the given parameters.
+impl WriteJob {
+    /// # Creates a new [`WriteJob`] instance with the given parameters.
     ///
     /// ## Arguments
     ///
-    /// * `wreq` - The [`WRequest`] instance containing the data to be written.
-    /// * `wtype` - The operation type to be executed. Can be [`WOps::Create`], [`WOps::Update`] or [`WOps::Delete`].
+    /// * `write_req` - The [`WasmModule`] instance containing the data to be written.
+    /// * `write_type` - The operation type to be executed. Can be [`WriteOps::Create`], [`WriteOps::Update`] or [`WriteOps::Delete`].
     /// * `id` - The ID of the record to be written to the database.
     ///
     /// ## Returns
     ///
-    /// A new [`WJob`] instance containing the parameters passed as arguments.
-    pub fn new(wreq: Option<WRequest>, wtype: WOps, id: String) -> Self {
-        Self { wreq, wtype, id }
+    /// A new [`WriteJob`] instance containing the parameters passed as arguments.
+    pub fn new(write_req: Option<WasmModule>, write_type: WriteOps, id: String) -> Self {
+        Self {
+            write_req,
+            write_type,
+            id,
+        }
     }
 }
 
 /// # Write Operation Type
-pub enum WOps {
+pub enum WriteOps {
     Create,
     Update,
     Delete,

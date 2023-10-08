@@ -18,7 +18,7 @@ pub mod models;
 
 use self::{
     cache::Cache,
-    models::{RJob, ReadResponse},
+    models::{ReadJob, ReadResponse},
 };
 use crate::{config::CONFIG, database::RocksDB};
 use std::sync::Arc;
@@ -33,7 +33,7 @@ use tokio::{
 /// Worker responsible for reading values from the database.
 pub struct Reader {
     /// Channel receiver that receives read requests.
-    rx: Receiver<RJob>,
+    rx: Receiver<ReadJob>,
     /// Database instance to read values from.
     db: RocksDB,
     /// Cache instance for reading values from the memory cache.
@@ -51,9 +51,9 @@ impl Reader {
     /// ## Returns
     ///
     /// A tuple containing a channel sender and an [`Arc<Mutex<Reader>>`] instance.
-    pub fn new(db: RocksDB, rx_writer: Receiver<String>) -> (Sender<RJob>, Arc<Mutex<Reader>>) {
+    pub fn new(db: RocksDB, rx_writer: Receiver<String>) -> (Sender<ReadJob>, Arc<Mutex<Reader>>) {
         let channel_size = CONFIG.reader.channel_size;
-        let (tx, rx) = mpsc::channel::<RJob>(channel_size);
+        let (tx, rx) = mpsc::channel::<ReadJob>(channel_size);
         let cache = Cache::new();
         (
             tx,
@@ -77,8 +77,8 @@ impl Reader {
                     let id = job.id;
                     //
                     match self.cache.get(id.clone(), || db_instance.get(id.as_str())) {
-                        Some(wasm_fn) => {
-                            tokio::spawn(async move { responder.send(ReadResponse::new(wasm_fn)) });
+                        Some(wasm_module) => {
+                            tokio::spawn(async move { responder.send(ReadResponse::new(wasm_module)) });
                         }
                         None => {
                             tokio::spawn(
