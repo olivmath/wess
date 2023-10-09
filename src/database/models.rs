@@ -33,7 +33,7 @@ pub struct WasmMetadata {
     pub function_name: String,
     /// The return type of the function.
     #[serde(rename = "returnType")]
-    pub return_type: TypeArg,
+    pub return_type: Vec<Option<TypeArg>>,
     /// A vector of function argument types.
     pub args: Vec<Option<TypeArg>>,
 }
@@ -59,7 +59,7 @@ impl WasmMetadata {
     /// ## Returns
     ///
     /// * An instance of [`WasmMetadata`].
-    pub fn new(function_name: String, return_type: TypeArg, args: Vec<Option<TypeArg>>) -> Self {
+    pub fn new(function_name: String, return_type: Vec<Option<TypeArg>>, args: Vec<Option<TypeArg>>) -> Self {
         Self {
             function_name,
             return_type,
