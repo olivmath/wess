@@ -87,7 +87,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     };
 
     let addr = format!("{}:{}", config.server.address, config.server.port);
-    info!("Run server on {}", &addr);
+    info!("Start server on {}", &addr);
     let wess = Arc::new(Mutex::new(WessServer::new(writer_tx, reader_tx, runner_tx)));
 
     let server_task = {
