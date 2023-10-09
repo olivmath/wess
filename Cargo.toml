@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 rocksdb = { version = "0.20.1", features = ["multi-threaded-cf"] }
 async-std = { version = "1.12.0", features = ["attributes"] }
+wasmer = { version = "4.2.2", features = ["enable-serde"] }
 serde = { version = "1.0.159", features = ["derive"] }
 tokio = { version = "1.27.0", features = ["full"] }
 tide-testing = "0.1.3"
@@ -21,4 +22,3 @@ tide = "0.16.0"
 rand = "0.8.5"
 log = "0.4.17"
 toml = "0.7.3"
-wasmer = "4.2.1"
