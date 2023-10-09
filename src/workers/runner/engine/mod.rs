@@ -12,7 +12,7 @@
 //! - [`RunnerError`]: An enum representing the possible errors that can occur during the execution of a run job.
 
 use crate::{
-    database::models::{TypeArg, WasmModule},
+    database::models::WasmModule,
     logger,
     metrics::constants::{WASM_COMPILER_TIME, WASM_EXECUTION_TIME},
     workers::runner::models::RunnerError,
@@ -43,8 +43,8 @@ impl Runtime {
     ///
     /// ## Returns
     ///
-    /// * A [`Result<serde_json::Value, RunnerError>`] containing either the function's result or an error.
-    pub fn run(&mut self, wasm_args: &[Value]) -> Result<serde_json::Value, RunnerError> {
+    /// * A [`Result<wasmer::Value, RunnerError>`] containing either the function's result or an error.
+    pub fn run(&mut self, wasm_args: &[Value]) -> Result<Box<[wasmer::Value]>, RunnerError> {
         let start = Instant::now();
         let mut store = Store::default();
         let module = match Module::new(&store, self.wasm_module.wasm.clone()) {
@@ -82,15 +82,7 @@ impl Runtime {
 
         let start = Instant::now();
         let result = match wasm_function.call(&mut store, wasm_args) {
-            Ok(r) => {
-                let value = r.first().unwrap().clone();
-                match self.wasm_module.metadata.return_type {
-                    TypeArg::I32 => serde_json::to_value(value.i32()),
-                    TypeArg::I64 => serde_json::to_value(value.i64()),
-                    TypeArg::F32 => serde_json::to_value(value.f32()),
-                    TypeArg::F64 => serde_json::to_value(value.f64()),
-                }
-            }
+            Ok(r) => r,
             Err(e) => {
                 let e = logger::log_error(RunnerError::FunctionExecutionError(e.to_string()));
                 return Err(e);
@@ -99,6 +91,6 @@ impl Runtime {
         let duration = start.elapsed();
         WASM_EXECUTION_TIME.observe(duration.as_secs_f64());
 
-        Ok(result.unwrap())
+        Ok(result)
     }
 }

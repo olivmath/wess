@@ -34,15 +34,15 @@ impl RunJob {
 }
 
 /// # Run Response Type
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub enum RunResponse {
-    Success(serde_json::Value),
+    Success(Box<[wasmer::Value]>),
     Fail(RunnerError),
 }
 
 impl RunResponse {
     /// # Success: [`String`]
-    pub fn new(r: serde_json::Value) -> Self {
+    pub fn new(r: Box<[wasmer::Value]>) -> Self {
         RunResponse::Success(r)
     }
 
