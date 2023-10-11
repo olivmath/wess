@@ -1,13 +1,11 @@
 use std::fmt;
 
-use crate::database::models::TypeArg;
-
 /// # Represents an error that can occur when parsing a request.
 #[derive(Debug)]
 pub enum RequestError {
     /// Indicates that the JSON in the request is invalid.
+    InvalidType(wasmer::Type),
     ChannelError(String),
-    InvalidType(TypeArg),
     InvalidJson(String),
     InvalidId(String),
     LengthArgsError {
