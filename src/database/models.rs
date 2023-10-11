@@ -3,7 +3,7 @@
 //! This module contains the following types:
 //!
 //! - [`Wasm`]: A type alias for a [`Vec<u8>`] representing WebAssembly bytecode.
-//! - [`TypeArg`]: A struct representing an argument for a WebAssembly function, containing a name and a type.
+//! - [`wasmer::Type`]: A struct representing an argument for a WebAssembly function, containing a name and a type.
 //! - [`WasmMetadata`]: A struct representing metadata associated with a WebAssembly function, containing its name, return type and a vector of function argument types.
 //! - [`WasmModule`]: A struct representing a WebAssembly function, containing its bytecode and metadata.
 //!
@@ -13,15 +13,6 @@ use serde::{Deserialize, Serialize};
 
 /// # Represents WebAssembly bytecode.
 pub type Wasm = Vec<u8>;
-
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
-pub enum TypeArg {
-    #[default]
-    I32,
-    I64,
-    F32,
-    F64,
-}
 
 /// # Represents metadata associated with a WebAssembly function.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
@@ -33,12 +24,11 @@ pub struct WasmMetadata {
     pub function_name: String,
     /// The return type of the function.
     #[serde(rename = "returnType")]
-    pub return_type: Vec<Option<TypeArg>>,
+    pub return_type: Vec<Option<wasmer::Type>>,
     /// A vector of function argument types.
-    pub args: Vec<Option<TypeArg>>,
+    pub args: Vec<Option<wasmer::Type>>,
 }
 
-/// # Represents a WebAssembly function.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct WasmModule {
     /// The WebAssembly bytecode.
@@ -54,12 +44,16 @@ impl WasmMetadata {
     ///
     /// * `func` - A string slice that represents the name of the function.
     /// * `return_type` - A string slice that represents the return type of the function.
-    /// * `args` - A vector of [`Option<TypeArg>`] objects that represent the function argument types.
+    /// * `args` - A vector of [`Option<wasmer::Type>`] objects that represent the function argument types.
     ///
     /// ## Returns
     ///
     /// * An instance of [`WasmMetadata`].
-    pub fn new(function_name: String, return_type: Vec<Option<TypeArg>>, args: Vec<Option<TypeArg>>) -> Self {
+    pub fn new(
+        function_name: String,
+        return_type: Vec<Option<wasmer::Type>>,
+        args: Vec<Option<wasmer::Type>>,
+    ) -> Self {
         Self {
             function_name,
             return_type,
