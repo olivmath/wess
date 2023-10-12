@@ -47,7 +47,7 @@ use workers::{reader::Reader, runner::Runner, writer::Writer};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    collect_usage_metrics().await;
+    tokio::spawn(collect_usage_metrics());
 
     let config = Arc::clone(&CONFIG);
     init_logger();
