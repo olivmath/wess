@@ -1,5 +1,4 @@
 use crate::{
-    logger,
     server::{
         errors::RequestError,
         response::{respond, respond_with_error},
@@ -44,9 +43,14 @@ pub async fn send_to_reader(id: String, reader_tx: Sender<ReadJob>) -> Result<Re
     reader_tx.send(read_job).await.unwrap();
 
     match done_rx.await {
-        Ok(response) => respond(response).await,
+        Ok(response) => match response {
+            ReadResponse::Success(r) => respond(r).await,
+            ReadResponse::Fail(e) => {
+                respond_with_error(log_error!(e).to_string(), StatusCode::InternalServerError).await
+            }
+        },
         Err(e) => {
-            logger::log_error(RequestError::ChannelError(e.to_string()));
+            log_error!(RequestError::ChannelError(e.to_string()));
             respond_with_error(e.to_string(), StatusCode::InternalServerError).await
         }
     }
