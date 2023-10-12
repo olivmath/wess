@@ -24,28 +24,27 @@
 
 #![allow(dead_code)]
 
-mod errors;
 pub mod models;
 
 use self::models::WasmModule;
-use crate::logger;
+use crate::metrics::constants::DATABASE_OPERATIONS_TOTAL;
 use crate::metrics::constants::DATABASE_OPERATION_DURATION;
-use crate::{config::CONFIG, metrics::constants::DATABASE_OPERATIONS_TOTAL};
-use errors::RocksDBError;
+
 use lazy_static::lazy_static;
 use log::{error, info};
-use rocksdb::{DBWithThreadMode, IteratorMode, MultiThreaded, Options, DB as DataBase};
+use rocksdb::{
+    DBWithThreadMode, Error as RocksDBError, IteratorMode, MultiThreaded, Options, DB as DataBase,
+};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 // Creating the single instance of RocksDB with inter-thread security.
 lazy_static! {
     pub static ref DB: Arc<Mutex<DBWithThreadMode<MultiThreaded>>> = {
-        let config = Arc::clone(&CONFIG);
         let mut options = Options::default();
         options.create_if_missing(true);
 
-        match DataBase::open_default(&config.database.path) {
+        match DataBase::open_default("./rocksdb/prod") {
             Ok(db) => Arc::new(Mutex::new(db)),
             Err(err) => {
                 error!(target: "wess::err","DB dont open: {err}");
@@ -54,11 +53,10 @@ lazy_static! {
         }
     };
     static ref DEV_DB: Arc<Mutex<DBWithThreadMode<MultiThreaded>>> = {
-        let config = Arc::clone(&CONFIG);
         let mut options = Options::default();
         options.create_if_missing(true);
 
-        match DataBase::open_default(&config.database.dev_path) {
+        match DataBase::open_default("./rocksdb/dev") {
             Ok(db) => Arc::new(Mutex::new(db)),
             Err(err) => {
                 error!(target: "wess::err","DEV DB dont open: {err}");
@@ -129,7 +127,7 @@ impl RocksDB {
             .lock()
             .unwrap()
             .put(key, serde_json::to_vec(&wasm).unwrap())
-            .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
+            .map_err(|e| log_error!(e))
             .and_then(|_| Ok(key.to_string()));
 
         let duration = start.elapsed();
@@ -159,7 +157,7 @@ impl RocksDB {
             .lock()
             .unwrap()
             .get(key)
-            .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
+            .map_err(|e| log_error!(e))
             .unwrap_or_default();
 
         let duration = start.elapsed();
@@ -193,7 +191,7 @@ impl RocksDB {
             .map(|item| match item {
                 Ok((_, v)) => Some(serde_json::from_slice(&v).unwrap()),
                 Err(e) => {
-                    logger::log_error(RocksDBError::Unknown(e.to_string()));
+                    log_error!(e);
                     None
                 }
             })
@@ -234,7 +232,7 @@ impl RocksDB {
             .lock()
             .unwrap()
             .put(key.as_bytes(), new_value)
-            .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
+            .map_err(|e| log_error!(e))
             .unwrap();
 
         let duration = start.elapsed();
@@ -270,7 +268,7 @@ impl RocksDB {
             .lock()
             .unwrap()
             .delete(key)
-            .map_err(|e| logger::log_error(RocksDBError::Unknown(e.to_string())))
+            .map_err(|e| log_error!(e))
             .unwrap();
 
         let duration = start.elapsed();
