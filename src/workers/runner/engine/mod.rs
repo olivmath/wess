@@ -23,6 +23,7 @@ use wasmer::{imports, Instance, Module, Store, Value};
 /// A runtime environment for executing WebAssembly functions.
 pub struct Runtime {
     wasm_module: WasmModule,
+    id: String,
 }
 
 impl Runtime {
@@ -31,8 +32,8 @@ impl Runtime {
     /// ## Arguments
     ///
     /// * `wasm_module` - A [`WasmModule`] object that represents the WebAssembly function.
-    pub fn new(wasm_module: WasmModule) -> Self {
-        Self { wasm_module }
+    pub fn new(wasm_module: WasmModule, id: String) -> Self {
+        Self { wasm_module, id }
     }
 
     /// # Executes a WebAssembly function.
@@ -54,8 +55,10 @@ impl Runtime {
                 return Err(e);
             }
         };
-        let duration = start.elapsed();
-        WASM_COMPILER_TIME.observe(duration.as_secs_f64());
+        let duration = start.elapsed().as_nanos() as f64;
+        WASM_COMPILER_TIME
+            .with_label_values(&[self.id.as_str()])
+            .observe(duration);
 
         let import_object = imports! {};
         let instance = match Instance::new(&mut store, &module, &import_object) {
@@ -88,8 +91,10 @@ impl Runtime {
                 return Err(e);
             }
         };
-        let duration = start.elapsed();
-        WASM_EXECUTION_TIME.observe(duration.as_secs_f64());
+        let duration = start.elapsed().as_nanos() as f64;
+        WASM_EXECUTION_TIME
+            .with_label_values(&[self.wasm_module.metadata.function_name.as_str()])
+            .observe(duration);
 
         Ok(result)
     }

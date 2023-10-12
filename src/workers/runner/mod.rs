@@ -63,7 +63,7 @@ impl Runner {
             let id = job.id;
             //
             match db.get(id.as_str()) {
-                Some(wasm_module) => match self.run_function(&args, wasm_module).await {
+                Some(wasm_module) => match self.run_function(&args, wasm_module, id).await {
                     Ok(result) => {
                         tokio::spawn(async move { responder.send(result) });
                     }
@@ -97,8 +97,9 @@ impl Runner {
         &self,
         args: &[Value],
         wasm_module: WasmModule,
+        id: String
     ) -> Result<RunResponse, RunnerError> {
-        let mut runtime = Runtime::new(wasm_module.clone());
+        let mut runtime = Runtime::new(wasm_module.clone(), id);
         match runtime.run(args) {
             Ok(r) => Ok(RunResponse::new(r)),
             Err(e) => Err(e),
