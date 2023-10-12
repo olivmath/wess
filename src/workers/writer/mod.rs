@@ -11,7 +11,7 @@
 pub mod models;
 
 use self::models::{WriteJob, WriteOps, WriterError};
-use crate::{config::CONFIG, database::RocksDB, logger};
+use crate::{config::CONFIG, database::RocksDB};
 use std::sync::Arc;
 use tokio::{
     spawn,
@@ -57,7 +57,7 @@ impl Writer {
             match job_type {
                 WriteOps::Create => {
                     if let Err(e) = self.db.add(id, wasm_req.unwrap()) {
-                        logger::log_error(WriterError::Create(id.to_string(), e.to_string()));
+                        log_error!(WriterError::Create(id.to_string(), e.to_string()));
                     }
                 }
                 WriteOps::Update => match self.db.upd(id, wasm_req.unwrap()) {
@@ -65,7 +65,7 @@ impl Writer {
                         spawn(async move { send_reader.send(id).await });
                     }
                     Err(e) => {
-                        logger::log_error(WriterError::Update(id.to_string(), e.to_string()));
+                        log_error!(WriterError::Update(id.to_string(), e.to_string()));
                     }
                 },
                 WriteOps::Delete => match self.db.del(id) {
@@ -73,7 +73,7 @@ impl Writer {
                         spawn(async move { send_reader.send(id).await });
                     }
                     Err(e) => {
-                        logger::log_error(WriterError::Delete(id.to_string(), e.to_string()));
+                        log_error!(WriterError::Delete(id.to_string(), e.to_string()));
                     }
                 },
             }

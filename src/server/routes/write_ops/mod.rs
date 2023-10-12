@@ -1,6 +1,5 @@
 use crate::{
     database::models::WasmModule,
-    logger,
     server::{
         errors::RequestError,
         response::{respond, respond_with_error},
@@ -79,7 +78,7 @@ async fn send_to_writer(
 
     task::spawn(async move {
         if let Err(e) = tx.send(write_job).await {
-            logger::log_error(RequestError::ChannelError(e.to_string()));
+            log_error!(RequestError::ChannelError(e.to_string()));
         }
     });
 
@@ -104,14 +103,14 @@ async fn verify_id(
             ReadResponse::Success(_) => Ok(id.to_string()),
             ReadResponse::Fail(e) => Err(RequestError::InvalidId(e)),
         },
-        Err(e) => Err(logger::log_error(RequestError::ChannelError(e.to_string()))),
+        Err(e) => Err(log_error!(RequestError::ChannelError(e.to_string()))),
     }
 }
 
 async fn deserialize_request(req: &mut Request<AppState>) -> Result<WasmModule, RequestError> {
     req.body_json::<WasmModule>()
         .await
-        .map_err(|e| logger::log_error(RequestError::InvalidJson(e.to_string())))
+        .map_err(|e| log_error!(RequestError::InvalidJson(e.to_string())))
 }
 
 fn random_id() -> String {

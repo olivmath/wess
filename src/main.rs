@@ -28,13 +28,13 @@
 
 mod config;
 mod database;
+#[macro_use]
 mod logger;
 mod metrics;
 mod server;
 mod workers;
 
-use crate::{config::CONFIG, metrics::collect_usage_metrics};
-use database::RocksDB;
+use crate::{config::CONFIG, database::RocksDB, metrics::collect_usage_metrics};
 use log::info;
 use logger::init_logger;
 use server::WessServer;

@@ -13,7 +13,6 @@
 
 use crate::{
     database::models::WasmModule,
-    logger,
     metrics::constants::{WASM_COMPILER_TIME, WASM_EXECUTION_TIME},
     workers::runner::models::RunnerError,
 };
@@ -51,7 +50,7 @@ impl Runtime {
         let module = match Module::new(&store, self.wasm_module.wasm.clone()) {
             Ok(m) => m,
             Err(e) => {
-                let e = logger::log_error(RunnerError::CompilingError(e.to_string()));
+                let e = log_error!(RunnerError::CompilingError(e.to_string()));
                 return Err(e);
             }
         };
@@ -64,7 +63,7 @@ impl Runtime {
         let instance = match Instance::new(&mut store, &module, &import_object) {
             Ok(i) => i,
             Err(e) => {
-                let e = logger::log_error(RunnerError::InitializingError(e.to_string()));
+                let e = log_error!(RunnerError::InitializingError(e.to_string()));
                 return Err(e);
             }
         };
@@ -75,7 +74,7 @@ impl Runtime {
         {
             Ok(f) => f,
             Err(e) => {
-                let e = logger::log_error(RunnerError::InstantiateFunctionError(
+                let e = log_error!(RunnerError::InstantiateFunctionError(
                     self.wasm_module.metadata.function_name.clone(),
                     e.to_string(),
                 ));
@@ -87,7 +86,7 @@ impl Runtime {
         let result = match wasm_function.call(&mut store, wasm_args) {
             Ok(r) => r,
             Err(e) => {
-                let e = logger::log_error(RunnerError::FunctionExecutionError(e.to_string()));
+                let e = log_error!(RunnerError::FunctionExecutionError(e.to_string()));
                 return Err(e);
             }
         };

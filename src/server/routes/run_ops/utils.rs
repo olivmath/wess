@@ -1,6 +1,5 @@
 use crate::{
     database::models::WasmModule,
-    logger,
     server::{errors::RequestError, AppState},
     workers::{
         reader::models::{ReadJob, ReadResponse},
@@ -54,12 +53,12 @@ pub async fn retrieve_wasm_module(
         Ok(response) => match response {
             ReadResponse::Success(wm) => Ok(wm),
             ReadResponse::Fail(e) => Err(CustomError {
-                err: logger::log_error(RequestError::InvalidId(e).to_string()),
+                err: log_error!(RequestError::InvalidId(e).to_string()),
                 status: StatusCode::NotFound,
             }),
         },
         Err(e) => Err(CustomError {
-            err: logger::log_error(RequestError::ChannelError(e.to_string())).to_string(),
+            err: log_error!(RequestError::ChannelError(e.to_string())).to_string(),
             status: StatusCode::InternalServerError,
         }),
     };
@@ -105,7 +104,7 @@ pub async fn send_to_runner(
             status: StatusCode::InternalServerError,
         }),
         Err(e) => Err(CustomError {
-            err: logger::log_error(RequestError::ChannelError(e.to_string()).to_string()),
+            err: log_error!(RequestError::ChannelError(e.to_string()).to_string()),
             status: StatusCode::InternalServerError,
         }),
     }
@@ -125,7 +124,7 @@ async fn parse_request_args(
     req: &mut Request<AppState>,
 ) -> Result<(Vec<wasmer::Type>, Vec<serde_json::Value>), CustomError> {
     let args: Vec<Option<serde_json::Value>> = req.body_json().await.map_err(|e| CustomError {
-        err: logger::log_error(RequestError::InvalidJson(e.to_string())).to_string(),
+        err: log_error!(RequestError::InvalidJson(e.to_string())).to_string(),
         status: StatusCode::BadRequest,
     })?;
 
@@ -140,7 +139,7 @@ async fn parse_request_args(
 
     if arg_types.len() != arg_values.len() {
         return Err(CustomError {
-            err: logger::log_error(RequestError::LengthArgsError {
+            err: log_error!(RequestError::LengthArgsError {
                 expect: arg_types.len(),
                 found: arg_values.len(),
             })
@@ -179,7 +178,7 @@ fn map_json_value_to_wasmer_value(
             .as_i64()
             .map(|i| wasmer::Value::I32(i as i32))
             .ok_or_else(|| CustomError {
-                err: logger::log_error(RequestError::InvalidType(wasmer::Type::I32).to_string()),
+                err: log_error!(RequestError::InvalidType(wasmer::Type::I32).to_string()),
                 status: StatusCode::BadRequest,
             }),
 
@@ -187,7 +186,7 @@ fn map_json_value_to_wasmer_value(
             .as_i64()
             .map(|i| wasmer::Value::I64(i))
             .ok_or_else(|| CustomError {
-                err: logger::log_error(RequestError::InvalidType(wasmer::Type::I64).to_string()),
+                err: log_error!(RequestError::InvalidType(wasmer::Type::I64).to_string()),
                 status: StatusCode::BadRequest,
             }),
 
@@ -195,7 +194,7 @@ fn map_json_value_to_wasmer_value(
             .as_f64()
             .map(|f| wasmer::Value::F32(f as f32))
             .ok_or_else(|| CustomError {
-                err: logger::log_error(RequestError::InvalidType(wasmer::Type::F32).to_string()),
+                err: log_error!(RequestError::InvalidType(wasmer::Type::F32).to_string()),
                 status: StatusCode::BadRequest,
             }),
 
@@ -203,12 +202,12 @@ fn map_json_value_to_wasmer_value(
             .as_f64()
             .map(|f| wasmer::Value::F64(f))
             .ok_or_else(|| CustomError {
-                err: logger::log_error(RequestError::InvalidType(wasmer::Type::F64).to_string()),
+                err: log_error!(RequestError::InvalidType(wasmer::Type::F64).to_string()),
                 status: StatusCode::BadRequest,
             }),
 
         _ => Err(CustomError {
-            err: logger::log_error(RequestError::InvalidType(*arg_type)).to_string(),
+            err: log_error!(RequestError::InvalidType(*arg_type)).to_string(),
             status: StatusCode::BadRequest,
         }),
     }
