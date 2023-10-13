@@ -46,12 +46,16 @@ impl Runtime {
     /// * A [`Result<wasmer::Value, RunnerError>`] containing either the function's result or an error.
     pub fn run(&mut self, wasm_args: &[Value]) -> Result<Box<[wasmer::Value]>, RunnerError> {
         let start = Instant::now();
+        // TODO: make statefull
+        // save the store in DB
         let mut store = Store::default();
-        let module = match Module::new(&store, self.wasm_module.wasm.clone()) {
-            Ok(m) => m,
-            Err(e) => {
-                let e = log_error!(RunnerError::CompilingError(e.to_string()));
-                return Err(e);
+        let module = unsafe {
+            match Module::from_binary_unchecked(&store, &self.wasm_module.wasm) {
+                Ok(m) => m,
+                Err(e) => {
+                    let e = log_error!(RunnerError::CompilingError(e.to_string()));
+                    return Err(e);
+                }
             }
         };
         let duration = start.elapsed();

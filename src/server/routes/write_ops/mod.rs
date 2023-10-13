@@ -18,6 +18,7 @@ use rand::Rng;
 use sha256::digest;
 use tide::{Error, Request, Response, StatusCode};
 use tokio::sync::{mpsc::Sender, oneshot};
+use wasmer::{Engine, Module};
 
 /// # Handler function for write operations.
 ///
@@ -115,6 +116,10 @@ async fn deserialize_request(req: &mut Request<AppState>) -> Result<WasmModule, 
     req.body_json::<WasmModule>()
         .await
         .map_err(|e| log_error!(RequestError::InvalidJson(e.to_string())))
+        .and_then(|wm| match Module::validate(&Engine::default(), &wm.wasm) {
+            Ok(_) => Ok(wm),
+            Err(e) => Err(log_error!(RequestError::InvalidWasm(format!("{}", e)))),
+        })
 }
 
 fn random_id() -> String {
