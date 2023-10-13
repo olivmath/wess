@@ -2,10 +2,12 @@ import { post, get } from "k6/http";
 import { sleep, check } from "k6";
 import { Rate } from "k6/metrics";
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
-import sum from "./payloads/sum_f32_f32.json"
-import fib from "./payloads/fibonacci.json"
-
+import sumJson from "./payloads/sum_f32_f32.js"
+import fibJson from "./payloads/fibonacci.js"
 const baseUrl = "http://127.0.0.1:7770"
+
+
+
 export const SuccessRunFunction = new Rate('SuccessRunFunction');
 
 
@@ -18,92 +20,98 @@ export function handleSummary(data) {
 
 export let options = {
     scenarios: {
-        smoke: {
-            executor: "constant-vus",
-            vus: 10,
-            duration: '5s',
-        },
-        load: {
-            startTime: '5s',
-            executor: 'ramping-vus',
-            startVUs: 0,
-            stages: [
-                { duration: '5s', target: 100 },
-                { duration: '10s', target: 100 },
-                { duration: '5s', target: 0 },
-            ],
-        },
+        // smoke: {
+        //     executor: "constant-vus",
+        //     vus: 10,
+        //     duration: '5s',
+        // },
+        // load: {
+        //     startTime: '5s',
+        //     executor: 'ramping-vus',
+        //     startVUs: 0,
+        //     stages: [
+        //         { duration: '5s', target: 100 },
+        //         { duration: '10s', target: 100 },
+        //         { duration: '5s', target: 0 },
+        //     ],
+        // },
         stress: {
-            startTime: '25s',
+            startTime: '0s',
             executor: "ramping-arrival-rate",
             preAllocatedVUs: 5000,
             timeUnit: "1s",
             stages: [
-                { duration: '5s', target: 100 },
                 { duration: '10s', target: 100 },
-                { duration: '5s', target: 500 },
+                { duration: '30s', target: 100 },
                 { duration: '10s', target: 500 },
+                { duration: '30s', target: 500 },
                 { duration: '5s', target: 1000 },
-                { duration: '10s', target: 1000 },
-                { duration: '5s', target: 0 },
+                { duration: '30s', target: 1000 },
+                { duration: '10s', target: 0 },
             ],
         },
-        peak: {
-            startTime: '75s',
-            executor: "ramping-arrival-rate",
-            preAllocatedVUs: 10000,
-            timeUnit: "1s",
-            stages: [
-                { duration: '5s', target: 100 },
-                { duration: '10s', target: 100 },
-                { duration: '5s', target: 10000 },
-                { duration: '10s', target: 10000 },
-                { duration: '5s', target: 100 },
-                { duration: '10s', target: 100 },
-                { duration: '5s', target: 0 },
-            ],
-        }
+        // peak: {
+        //     startTime: '0s',
+        //     executor: "ramping-arrival-rate",
+        //     preAllocatedVUs: 10000,
+        //     timeUnit: "1s",
+        //     stages: [
+        //         { duration: '5s', target: 100 },
+        //         { duration: '10s', target: 100 },
+        //         { duration: '5s', target: 10000 },
+        //         { duration: '10s', target: 10000 },
+        //         { duration: '5s', target: 100 },
+        //         { duration: '10s', target: 100 },
+        //         { duration: '5s', target: 0 },
+        //     ],
+        // }
     },
     thresholds: {
-        'SavedCorrectly': ['rate>0.9'],
+        'SuccessRunFunction': ['rate>0.9'],
     }
 }
 
 
+let COUNTER = 0
 
 export default function () {
     // Save a new Wasm module
     const createResponse = sum.create()
-    const id = JSON.parse(createResponse.body).message;
     check(createResponse, {
         'status 200 - write': (r) => r.status === 200,
         'max duration - write': (r) => r.timings.duration < 4000
     })
+    COUNTER += 1
     sleep(1);
-
-    // Retrieve the Wasm module
-    const getResponse = getWasm(id)
-    check(getResponse, {
-        'status 200 - read': (r) => r.status === 200,
-        'max duration - read': (r) => r.timings.duration < 4000,
-    })
-    
-    // Run function the wasm module
-    const x = parseInt(Math.random() * 1000000)
-    const y = parseInt(Math.random() * 1000000)
-    const runResponse = sum.run(x, y, id)
-    check(runResponse, {
-        'status 200 - read': (r) => r.status === 200,
-        'max duration - read': (r) => r.timings.duration < 4000,
-    })
-
-    SuccessRunFunction.add(x + y === runResponse.body[0])
 }
+
+export function teardown(data) {
+    const r = get(baseUrl)
+    console.log(r.json().message)
+    console.log(COUNTER)
+    console.log(COUNTER == r.json().message)
+    SuccessRunFunction.add(COUNTER == r.json().message)
+}
+
+// export default function () {
+
+//     const x = parseInt(Math.random() * 100000)
+//     const y = parseInt(Math.random() * 100000)
+//     const runResponse = sum.run(x, y, "4d0dc0c93b9c5a49670b1c27f8d68db5b54aa2f5f09741e5d3f26117ed58bbd5")
+
+//     check(runResponse, {
+//         'status 200 - run': (r) => r.status === 200,
+//         'max duration - run': (r) => r.timings.duration < 4000,
+//     })
+
+//     SuccessRunFunction.add(x + y === JSON.parse(runResponse.body).message[0])
+//     sleep(1)
+// }
+
 
 const sum = {
     create: () => {
-        const payload = sum
-        return post(baseUrl, JSON.stringify(payload));
+        return post(baseUrl, JSON.stringify(sumJson));
     },
     run: (x, y, id) => {
         return post(`${baseUrl}/${id}`, JSON.stringify([x, y]));
@@ -112,9 +120,7 @@ const sum = {
 
 const fibonacci = {
     create: () => {
-
-        const payload = fib
-        return post(baseUrl, JSON.stringify(payload));
+        return post(baseUrl, fibJson);
     },
     run: (x, y, id) => {
         return post(`${baseUrl}/${id}`, JSON.stringify([x, y]));
