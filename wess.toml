@@ -4,7 +4,7 @@ address = "0.0.0.0"
 
 [database]
 db = "rocksdb"
-application = "dev"
+stage = "dev"
 
 [reader]
 cache_size = 1024

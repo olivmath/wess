@@ -26,10 +26,11 @@
 //!
 //! To get started with Wess
 
-mod config;
-mod database;
 #[macro_use]
 mod logger;
+
+mod config;
+mod database;
 mod metrics;
 mod server;
 mod workers;
