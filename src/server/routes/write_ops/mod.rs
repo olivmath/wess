@@ -1,5 +1,8 @@
+use std::convert::TryInto;
+
 use crate::{
     database::models::WasmModule,
+    metrics::constants::WRITER_CHANNEL_QUEUE,
     server::{
         errors::RequestError,
         response::{respond, respond_with_error},
@@ -80,6 +83,7 @@ async fn send_to_writer(
         if let Err(e) = tx.send(write_job).await {
             log_error!(RequestError::ChannelError(e.to_string()));
         }
+        WRITER_CHANNEL_QUEUE.set(tx.capacity().try_into().unwrap());
     });
 
     respond(serde_json::json!({

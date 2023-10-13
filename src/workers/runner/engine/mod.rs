@@ -54,10 +54,10 @@ impl Runtime {
                 return Err(e);
             }
         };
-        let duration = start.elapsed().as_nanos() as f64;
+        let duration = start.elapsed();
         WASM_COMPILER_TIME
             .with_label_values(&[self.id.as_str()])
-            .observe(duration);
+            .observe(duration.as_secs_f64());
 
         let import_object = imports! {};
         let instance = match Instance::new(&mut store, &module, &import_object) {
@@ -90,10 +90,10 @@ impl Runtime {
                 return Err(e);
             }
         };
-        let duration = start.elapsed().as_nanos() as f64;
+        let duration = start.elapsed();
         WASM_EXECUTION_TIME
             .with_label_values(&[self.wasm_module.metadata.function_name.as_str()])
-            .observe(duration);
+            .observe(duration.as_secs_f64());
 
         Ok(result)
     }

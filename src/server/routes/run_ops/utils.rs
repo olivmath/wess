@@ -1,5 +1,6 @@
 use crate::{
     database::models::WasmModule,
+    metrics::constants::RUNNER_CHANNEL_QUEUE,
     server::{errors::RequestError, AppState},
     workers::{
         reader::models::{ReadJob, ReadResponse},
@@ -96,6 +97,7 @@ pub async fn send_to_runner(
             status: StatusCode::InternalServerError,
         })
         .unwrap();
+    RUNNER_CHANNEL_QUEUE.set(runner_tx.capacity() as i64);
 
     match done_rx.await {
         Ok(RunResponse::Success(r)) => Ok(r),

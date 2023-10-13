@@ -20,10 +20,7 @@ impl<State: Clone + Send + Sync + 'static> Middleware<State> for RequestMetricsM
         let duration = start.elapsed();
 
         CONCURRENT_CONNECTIONS.dec();
-
-        let duration_in_seconds =
-            duration.as_secs_f64() + f64::from(duration.subsec_nanos()) / 1_000_000_000.0;
-        HTTP_REQUEST_LATENCY.observe(duration_in_seconds);
+        HTTP_REQUEST_LATENCY.observe(duration.as_secs_f64());
 
         Ok(response)
     }
