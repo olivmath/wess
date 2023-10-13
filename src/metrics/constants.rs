@@ -18,11 +18,25 @@ lazy_static! {
         "Number of concurrent connections"
     ).unwrap_or_else(|e| panic!("Metric create `CONCURRENT_CONNECTIONS` failed,  {}", e));
 
+    pub static ref READER_CHANNEL_QUEUE: IntGauge = register_int_gauge!(
+        "wess_reader_channel_queue",
+        "All requests in the Reader channel queue"
+    ).unwrap_or_else(|e| panic!("Metric create `READER_CHANNEL_QUEUE` failed,  {}", e));
+
+    pub static ref WRITER_CHANNEL_QUEUE: IntGauge = register_int_gauge!(
+        "wess_writer_channel_queue",
+        "All requests in the Writer channel queue"
+    ).unwrap_or_else(|e| panic!("Metric create `WRITER_CHANNEL_QUEUE` failed,  {}", e));
+
+    pub static ref RUNNER_CHANNEL_QUEUE: IntGauge = register_int_gauge!(
+        "wess_runner_channel_queue",
+        "All requests in the Runner channel queue"
+    ).unwrap_or_else(|e| panic!("Metric create `RUNNER_CHANNEL_QUEUE` failed,  {}", e));
 
     pub static ref HTTP_REQUEST_LATENCY: Histogram = register_histogram!(
         "wess_http_request_latency_seconds",
         "HTTP request latency in seconds",
-        exponential_buckets(0.01, 2.0, 10).unwrap_or_else(|e| panic!("Metric create `HTTP_REQUEST_LATENCY` failed, {}", e))
+        exponential_buckets(0.00005, 2.0, 12).unwrap_or_else(|e| panic!("Metric create `HTTP_REQUEST_LATENCY` failed, {}", e))
     ).unwrap_or_else(|e| panic!("Metric create `HTTP_REQUEST_LATENCY` failed,  {}", e));
 
     pub static ref ERROR_COUNT: IntCounter = register_int_counter!(
@@ -40,7 +54,7 @@ lazy_static! {
         "wess_database_operation_duration_seconds",
         "Duration of database operations in seconds",
         &["operation"],
-        exponential_buckets(0.01, 2.0, 10).unwrap_or_else(|e| panic!("Metric create `DATABASE_OPERATION_DURATION` failed, {}", e))
+        exponential_buckets(0.000005, 2.0, 12).unwrap_or_else(|e| panic!("Metric create `DATABASE_OPERATION_DURATION` failed, {}", e))
     ).unwrap_or_else(|e| panic!("Metric create `DATABASE_OPERATION_DURATION` failed,  {}", e));
 
     pub static ref CPU_USAGE: IntGauge = register_int_gauge!(
@@ -59,16 +73,16 @@ lazy_static! {
     ).unwrap_or_else(|e| panic!("Metric create `DATABASE_SIZE` failed,  {}", e));
 
     pub static ref WASM_COMPILER_TIME: HistogramVec = register_histogram_vec!(
-        "wess_wasm_compiler_time_nanoseconds",
-        "Compiler Wasm time in nanoseconds",
+        "wess_wasm_compile_time_seconds",
+        "Compile Wasm time in seconds",
         &["wasm_module"],
-        exponential_buckets(1.0, 2.0, 10).unwrap_or_else(|e| panic!("Metric create `WASM_COMPILER_TIME` failed, {}", e))
+        exponential_buckets(0.0005, 2.0, 12).unwrap_or_else(|e| panic!("Metric create `WASM_COMPILER_TIME` failed, {}", e))
     ).unwrap_or_else(|e| panic!("Metric create `WASM_COMPILER_TIME` failed,  {}", e));
     
     pub static ref WASM_EXECUTION_TIME: HistogramVec = register_histogram_vec!(
-        "wess_wasm_execution_time_nanoseconds",
-        "Execution Wasm function time in nanoseconds",
+        "wess_wasm_execution_time_seconds",
+        "Execution Wasm function time in seconds",
         &["function_name"],
-        exponential_buckets(1.0, 2.0, 10).unwrap_or_else(|e| panic!("Metric create `WASM_EXECUTION_TIME` failed, {}", e))
+        exponential_buckets(0.000005, 2.0, 12).unwrap_or_else(|e| panic!("Metric create `WASM_EXECUTION_TIME` failed, {}", e))
     ).unwrap_or_else(|e| panic!("Metric create `WASM_EXECUTION_TIME` failed, {}", e));
 }
