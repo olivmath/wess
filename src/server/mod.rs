@@ -68,6 +68,7 @@ impl WessServer {
 
         // Write ops
         app.at("/")
+            .get(|req| async { make_read_op(req).await })
             .post(|req| async { make_write_op(req, WriteOps::Create).await });
         app.at("/:id")
             .put(|req| async { make_write_op(req, WriteOps::Update).await })

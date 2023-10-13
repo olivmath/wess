@@ -75,17 +75,24 @@ impl Reader {
                     let responder = job.responder;
                     let db_instance = &self.db;
                     let id = job.id;
-                    //
-                    match self.cache.get(id.clone(), || db_instance.get(id.as_str())) {
-                        Some(wasm_module) => {
-                            tokio::spawn(async move { responder.send(ReadResponse::new(wasm_module)) });
-                        }
-                        None => {
-                            tokio::spawn(
-                                async move { responder.send(ReadResponse::fail("Not found".into())) },
-                            );
-                        }
-                    };
+                    if id == "" {
+                        let r = db_instance.all().len().to_string();
+                        tokio::spawn(async move {
+                            responder.send(ReadResponse::fail(r))
+                        });
+                    } else {
+                        //
+                        match self.cache.get(id.clone(), || db_instance.get(id.as_str())) {
+                            Some(wasm_module) => {
+                                tokio::spawn(async move { responder.send(ReadResponse::new(wasm_module)) });
+                            }
+                            None => {
+                                tokio::spawn(
+                                    async move { responder.send(ReadResponse::fail("Not found".into())) },
+                                );
+                            }
+                        };
+                    }
                 }
                 Some(id) = self.rx_writer.recv() => {
                     self.cache.del(id)
