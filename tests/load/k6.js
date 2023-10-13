@@ -1,11 +1,12 @@
 import { post, get } from "k6/http";
 import { sleep, check } from "k6";
 import { Rate } from "k6/metrics";
-import utils from "./utils.js";
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
+import sum from "./payloads/sum_f32_f32.json"
+import fib from "./payloads/fibonacci.json"
 
-
-export const SavedCorrectly = new Rate('SavedCorrectly');
+const baseUrl = "http://127.0.0.1:7770"
+export const SuccessRunFunction = new Rate('SuccessRunFunction');
 
 
 export function handleSummary(data) {
@@ -72,22 +73,54 @@ export let options = {
 
 export default function () {
     // Save a new Wasm module
-    const response = post(utils.URL, JSON.stringify(utils.WASM));
-    const id = JSON.parse(response.body).message;
-    check(response, {
+    const createResponse = sum.create()
+    const id = JSON.parse(createResponse.body).message;
+    check(createResponse, {
         'status 200 - write': (r) => r.status === 200,
         'max duration - write': (r) => r.timings.duration < 4000
     })
     sleep(1);
 
     // Retrieve the Wasm module
-    const result = get(utils.urlId(id))
-    check(result, {
+    const getResponse = getWasm(id)
+    check(getResponse, {
+        'status 200 - read': (r) => r.status === 200,
+        'max duration - read': (r) => r.timings.duration < 4000,
+    })
+    
+    // Run function the wasm module
+    const x = parseInt(Math.random() * 1000000)
+    const y = parseInt(Math.random() * 1000000)
+    const runResponse = sum.run(x, y, id)
+    check(runResponse, {
         'status 200 - read': (r) => r.status === 200,
         'max duration - read': (r) => r.timings.duration < 4000,
     })
 
-    // Check if Wasm module has saved correctly
-    SavedCorrectly.add(utils.checkWasm(JSON.parse(result.body)))
-    sleep(1)
+    SuccessRunFunction.add(x + y === runResponse.body[0])
+}
+
+const sum = {
+    create: () => {
+        const payload = sum
+        return post(baseUrl, JSON.stringify(payload));
+    },
+    run: (x, y, id) => {
+        return post(`${baseUrl}/${id}`, JSON.stringify([x, y]));
+    }
+}
+
+const fibonacci = {
+    create: () => {
+
+        const payload = fib
+        return post(baseUrl, JSON.stringify(payload));
+    },
+    run: (x, y, id) => {
+        return post(`${baseUrl}/${id}`, JSON.stringify([x, y]));
+    }
+}
+
+function getWasm(id) {
+    return get(`${baseUrl}/${id}`)
 }
