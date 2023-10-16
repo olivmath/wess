@@ -57,7 +57,10 @@ impl Writer {
             match job_type {
                 WriteOps::Create => {
                     if let Err(e) = self.db.add(id, wasm_req.unwrap()) {
-                        log_error!(WriterError::Create(id.to_string(), e.to_string()));
+                        log_error!(WriterError::Create {
+                            id: id.to_string(),
+                            err: e.to_string()
+                        });
                     }
                 }
                 WriteOps::Update => match self.db.upd(id, wasm_req.unwrap()) {
@@ -65,7 +68,10 @@ impl Writer {
                         spawn(async move { send_reader.send(id).await });
                     }
                     Err(e) => {
-                        log_error!(WriterError::Update(id.to_string(), e.to_string()));
+                        log_error!(WriterError::Update {
+                            id: id.to_string(),
+                            err: e.to_string()
+                        });
                     }
                 },
                 WriteOps::Delete => match self.db.del(id) {
@@ -73,7 +79,10 @@ impl Writer {
                         spawn(async move { send_reader.send(id).await });
                     }
                     Err(e) => {
-                        log_error!(WriterError::Delete(id.to_string(), e.to_string()));
+                        log_error!(WriterError::Delete {
+                            id: id.to_string(),
+                            err: e.to_string()
+                        });
                     }
                 },
             }

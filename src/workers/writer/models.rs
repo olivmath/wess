@@ -48,17 +48,17 @@ pub enum WriteOps {
 }
 
 pub enum WriterError {
-    Create(String, String),
-    Update(String, String),
-    Delete(String, String),
+    Create { id: String, err: String },
+    Update { id: String, err: String },
+    Delete { id: String, err: String },
 }
 
 impl fmt::Display for WriterError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            WriterError::Create(id, err) => write!(f, "Create: {id} Error: {err}"),
-            WriterError::Update(id, err) => write!(f, "Update: {id} Error: {err}"),
-            WriterError::Delete(id, err) => write!(f, "Delete: {id} Error: {err}"),
+            WriterError::Create { id, err } => write!(f, "OP: Create, ID: {id}, Error: {err}"),
+            WriterError::Update { id, err } => write!(f, "OP: Update, ID: {id}, Error: {err}"),
+            WriterError::Delete { id, err } => write!(f, "OP: Delete, ID: {id}, Error: {err}"),
         }
     }
 }
