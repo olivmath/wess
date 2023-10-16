@@ -123,6 +123,7 @@ async fn deserialize_request(req: &mut Request<AppState>) -> Result<WasmModule, 
 }
 
 fn random_id() -> String {
+    // TODO: change to uuid
     let mut rng = rand::thread_rng();
     let random_number: u32 = rng.gen_range(0..u32::MAX);
 

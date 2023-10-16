@@ -3,6 +3,7 @@
 ## tl;dr
 
 **Just for Learn!!!**
+
 - Store your WebAsembly
 - Run your WebAssembly
 
@@ -11,6 +12,9 @@
 | Feature                                                                   | Status | Priority |
 | ------------------------------------------------------------------------- | ------ | -------- |
 | Docs about how to execute a function                                      | ⏰     | 🔥       |
+| Import another wasm module into wasm functions                            | ⏰     | 😴       |
+| Give access to `syscall` into wasm functions                              | ⏰     | 😴       |
+| Make wasm functions with persisted memory state (store/retrieve)          | ⏰     | 😴       |
 | Run Wasm functions multiple params (Array<T>) -> (Array<T>)               | ⏰     | 😴       |
 | CRUD ops Wasm module                                                      | ✅     | ✅       |
 | Run Wasm functions without params () -> i32                               | ✅     | ✅       |
@@ -27,14 +31,7 @@
 
 ## Architecture
 
-<details>
-<summary>
-Full Drawn
-</summary>
-
 <img src="./docs/arch.png" alt="Architecture component"/>
-
-</details>
 
 ### Request Handles
 
