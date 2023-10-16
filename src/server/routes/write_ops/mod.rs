@@ -14,10 +14,9 @@ use crate::{
     },
 };
 use async_std::task;
-use rand::Rng;
-use sha256::digest;
 use tide::{Error, Request, Response, StatusCode};
 use tokio::sync::{mpsc::Sender, oneshot};
+use uuid::Uuid;
 use wasmer::{Engine, Module};
 
 /// # Handler function for write operations.
@@ -123,9 +122,5 @@ async fn deserialize_request(req: &mut Request<AppState>) -> Result<WasmModule, 
 }
 
 fn random_id() -> String {
-    // TODO: change to uuid
-    let mut rng = rand::thread_rng();
-    let random_number: u32 = rng.gen_range(0..u32::MAX);
-
-    digest(random_number.to_be_bytes().as_slice())
+    Uuid::new_v4().to_string()
 }
