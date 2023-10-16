@@ -2,7 +2,7 @@
 
 ## tl;dr
 
-- Wess is a WebAssembly-as-a-Service (WaaS) system with learning proposal. The service provides:
+**Just for Learn!!!**
 - Store your WebAsembly
 - Run your WebAssembly
 
