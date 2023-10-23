@@ -10,7 +10,7 @@
 //! - [`routes`]: A module that contains the logic for handling HTTP routes.
 //! - [`models`]: A module that contains the models for wrap json requests.
 
-pub mod errors;
+
 pub mod response;
 mod routes;
 

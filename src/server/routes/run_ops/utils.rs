@@ -1,25 +1,20 @@
 use crate::{
     database::models::WasmModule,
+    errors::WessError,
     metrics::constants::RUNNER_CHANNEL_QUEUE,
-    server::{errors::RequestError, AppState},
+    server::AppState,
     workers::{
         reader::models::{ReadJob, ReadResponse},
         runner::models::{RunJob, RunResponse},
     },
 };
-use tide::{Request, StatusCode};
+use tide::Request;
 use tokio::sync::{mpsc::Sender, oneshot};
-
-#[derive(Debug)]
-pub struct CustomError {
-    pub err: String,
-    pub status: StatusCode,
-}
 
 pub async fn serialize_wasm_return(
     result: Box<[wasmer::Value]>,
     return_type: &Vec<Option<wasmer::Type>>,
-) -> Result<Vec<serde_json::Value>, CustomError> {
+) -> Result<Vec<serde_json::Value>, WessError> {
     let serialized_result = result
         .iter()
         .zip(return_type.iter())
@@ -41,38 +36,38 @@ pub async fn serialize_wasm_return(
 pub async fn retrieve_wasm_module(
     id: &String,
     req: &Request<AppState>,
-) -> Result<WasmModule, CustomError> {
+) -> Result<WasmModule, WessError> {
     let reader_tx = req.state().reader_tx.clone();
     let (done_tx, done_rx) = oneshot::channel::<ReadResponse>();
 
     reader_tx
-        .send(ReadJob::new(done_tx, id.clone()))
+        .send(ReadJob::new(done_tx, Some(id.clone())))
         .await
         .unwrap();
 
-    let x = match done_rx.await {
+    match done_rx.await {
         Ok(response) => match response {
-            ReadResponse::Success(wm) => Ok(wm),
-            ReadResponse::Fail(e) => Err(CustomError {
-                err: log_error!(RequestError::InvalidId(e).to_string()),
-                status: StatusCode::NotFound,
-            }),
+            ReadResponse::Module(wm) => Ok(wm),
+            ReadResponse::Fail(e) => {
+                let werr = log_error!(format!("Invalid Id: {}", e.to_string()), 404);
+                Err(werr)
+            }
+            _ => unreachable!(),
         },
-        Err(e) => Err(CustomError {
-            err: log_error!(RequestError::ChannelError(e.to_string())).to_string(),
-            status: StatusCode::InternalServerError,
-        }),
-    };
-    x
+        Err(e) => {
+            let werr = log_error!(format!("Channel Error: {}", e.to_string()), 500);
+            Err(werr)
+        }
+    }
 }
 
 pub async fn deserialize_request(
     wasm_module: &WasmModule,
     req: &mut Request<AppState>,
-) -> Result<Vec<wasmer::Value>, CustomError> {
+) -> Result<Vec<wasmer::Value>, WessError> {
     let (arg_types, arg_values) = parse_request_args(wasm_module, req).await?;
 
-    let dynamic_args: Result<Vec<wasmer::Value>, CustomError> = arg_types
+    let dynamic_args: Result<Vec<wasmer::Value>, WessError> = arg_types
         .iter()
         .zip(arg_values.iter())
         .map(|(arg_type, arg_value)| map_json_value_to_wasmer_value(arg_type, arg_value))
@@ -85,50 +80,44 @@ pub async fn send_to_runner(
     id: String,
     args: Vec<wasmer::Value>,
     runner_tx: Sender<RunJob>,
-) -> Result<Box<[wasmer::Value]>, CustomError> {
+) -> Result<Box<[wasmer::Value]>, WessError> {
     let (done_tx, done_rx) = oneshot::channel::<RunResponse>();
     let run_job = RunJob::new(done_tx, args, id);
 
     runner_tx
         .send(run_job)
         .await
-        .map_err(|e| CustomError {
-            err: e.to_string(),
-            status: StatusCode::InternalServerError,
-        })
+        .map_err(|e| log_error!(e.to_string(), 500))
         .unwrap();
     RUNNER_CHANNEL_QUEUE.set(runner_tx.capacity() as i64);
 
     match done_rx.await {
         Ok(RunResponse::Success(r)) => Ok(r),
-        Ok(RunResponse::Fail(f)) => Err(CustomError {
-            err: f.to_string(),
-            status: StatusCode::InternalServerError,
-        }),
-        Err(e) => Err(CustomError {
-            err: log_error!(RequestError::ChannelError(e.to_string()).to_string()),
-            status: StatusCode::InternalServerError,
-        }),
+        Ok(RunResponse::Fail(f)) => {
+            let werr = log_error!(f.to_string(), 500);
+            Err(werr)
+        }
+        Err(e) => {
+            let werr = log_error!(format!("Channel Error: {}", e.to_string()), 500);
+            Err(werr)
+        }
     }
 }
 
-pub fn get_id_from_request(req: &Request<AppState>) -> Result<String, CustomError> {
+pub fn get_id_from_request(req: &Request<AppState>) -> Result<String, WessError> {
     req.param("id")
         .map(|id| id.to_string())
-        .map_err(|e| CustomError {
-            err: e.to_string(),
-            status: StatusCode::BadRequest,
-        })
+        .map_err(|e| log_error!(e.to_string(), 400))
 }
 
 async fn parse_request_args(
     wasm_module: &WasmModule,
     req: &mut Request<AppState>,
-) -> Result<(Vec<wasmer::Type>, Vec<serde_json::Value>), CustomError> {
-    let args: Vec<Option<serde_json::Value>> = req.body_json().await.map_err(|e| CustomError {
-        err: log_error!(RequestError::InvalidJson(e.to_string())).to_string(),
-        status: StatusCode::BadRequest,
-    })?;
+) -> Result<(Vec<wasmer::Type>, Vec<serde_json::Value>), WessError> {
+    let args: Vec<Option<serde_json::Value>> = req
+        .body_json()
+        .await
+        .map_err(|e| log_error!(format!("Invalid Json: {}", e.to_string()), 400))?;
 
     let arg_types = wasm_module
         .metadata
@@ -140,14 +129,15 @@ async fn parse_request_args(
     let arg_values: Vec<serde_json::Value> = args.iter().filter_map(|v| v.clone()).collect();
 
     if arg_types.len() != arg_values.len() {
-        return Err(CustomError {
-            err: log_error!(RequestError::LengthArgsError {
-                expect: arg_types.len(),
-                found: arg_values.len(),
-            })
-            .to_string(),
-            status: StatusCode::BadRequest,
-        });
+        let werr = log_error!(
+            format!(
+                "Length Args Error: expect: {}, found: {}",
+                arg_types.len(),
+                arg_values.len()
+            ),
+            400
+        );
+        return Err(werr);
     }
 
     Ok((arg_types, arg_values))
@@ -174,43 +164,28 @@ fn serialize_wasm_value(value: &wasmer::Value) -> serde_json::Value {
 fn map_json_value_to_wasmer_value(
     arg_type: &wasmer::Type,
     arg_value: &serde_json::Value,
-) -> Result<wasmer::Value, CustomError> {
+) -> Result<wasmer::Value, WessError> {
     match arg_type {
         wasmer::Type::I32 => arg_value
             .as_i64()
             .map(|i| wasmer::Value::I32(i as i32))
-            .ok_or_else(|| CustomError {
-                err: log_error!(RequestError::InvalidType(wasmer::Type::I32).to_string()),
-                status: StatusCode::BadRequest,
-            }),
+            .ok_or_else(|| log_error!(format!("Invalid Type: I32"), 400)),
 
         wasmer::Type::I64 => arg_value
             .as_i64()
             .map(|i| wasmer::Value::I64(i))
-            .ok_or_else(|| CustomError {
-                err: log_error!(RequestError::InvalidType(wasmer::Type::I64).to_string()),
-                status: StatusCode::BadRequest,
-            }),
+            .ok_or_else(|| log_error!(format!("Invalid Type: I64"), 400)),
 
         wasmer::Type::F32 => arg_value
             .as_f64()
             .map(|f| wasmer::Value::F32(f as f32))
-            .ok_or_else(|| CustomError {
-                err: log_error!(RequestError::InvalidType(wasmer::Type::F32).to_string()),
-                status: StatusCode::BadRequest,
-            }),
+            .ok_or_else(|| log_error!(format!("Invalid Type: F32"), 400)),
 
         wasmer::Type::F64 => arg_value
             .as_f64()
             .map(|f| wasmer::Value::F64(f))
-            .ok_or_else(|| CustomError {
-                err: log_error!(RequestError::InvalidType(wasmer::Type::F64).to_string()),
-                status: StatusCode::BadRequest,
-            }),
+            .ok_or_else(|| log_error!(format!("Invalid Type: F64"), 400)),
 
-        _ => Err(CustomError {
-            err: log_error!(RequestError::InvalidType(*arg_type)).to_string(),
-            status: StatusCode::BadRequest,
-        }),
+        _ => Err(log_error!(format!("Invalid Type: {}", *arg_type), 400)),
     }
 }

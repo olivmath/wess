@@ -1,16 +1,17 @@
 use std::convert::TryInto;
 
 use crate::{
+    errors::WessError,
     metrics::constants::READER_CHANNEL_QUEUE,
     server::{
-        errors::RequestError,
         response::{respond, respond_with_error},
         AppState,
     },
     workers::reader::models::{ReadJob, ReadResponse},
 };
-use tide::{Error, Request, Response, StatusCode};
+use tide::{Error, Request, Response};
 use tokio::sync::{mpsc::Sender, oneshot};
+use uuid::Uuid;
 
 /// # Handler function for read operations.
 ///
@@ -22,32 +23,54 @@ use tokio::sync::{mpsc::Sender, oneshot};
 ///
 /// A [`Result`] containing the [`Response`] object.
 pub async fn make_read_op(req: Request<AppState>) -> Result<Response, Error> {
-    let reader_tx = req.state().reader_tx.clone();
-    if req.url().path() == "/" {
-        return get_all(reader_tx).await;
+    match validate_id(&req) {
+        Ok(input) => {
+            let reader_tx: Sender<ReadJob> = req.state().reader_tx.clone();
+            match input {
+                Some(id) => send_to_reader(id, reader_tx).await,
+                None => get_all(reader_tx).await,
+            }
+        }
+        Err(e) => respond_with_error(e).await,
     }
-    let id = req.param("id").unwrap();
+}
 
-    send_to_reader(id.to_owned(), reader_tx).await
+fn validate_id(req: &Request<AppState>) -> Result<Option<String>, WessError> {
+    match req.param("id") {
+        Ok(input) => match Uuid::parse_str(input) {
+            Ok(id) => Ok(Some(id.to_string())),
+            Err(e) => {
+                let werr = log_error!(format!("Invalid ID: {}", e.to_string()), 400);
+                Err(werr)
+            }
+        },
+        Err(e) => {
+            eprint!("hmmm");
+            let werr = log_error!(e.to_string(), 400);
+            Err(werr)
+        }
+    }
 }
 
 async fn get_all(reader_tx: Sender<ReadJob>) -> Result<Response, Error> {
-    let (done_tx, done_rx) = oneshot::channel::<ReadResponse>();
-    let read_job = ReadJob::new(done_tx, "".to_string());
+    let (tx, rx) = oneshot::channel::<ReadResponse>();
+    let read_job = ReadJob { id: None, tx };
 
     reader_tx.send(read_job).await.unwrap();
     READER_CHANNEL_QUEUE.set(reader_tx.capacity().try_into().unwrap());
 
-    match done_rx.await {
+    match rx.await {
         Ok(response) => match response {
-            ReadResponse::Success(r) => respond(r).await,
+            ReadResponse::Module(_) => todo!(),
+            ReadResponse::Size(r) => respond(r).await,
             ReadResponse::Fail(e) => {
-                respond_with_error(log_error!(e).to_string(), StatusCode::InternalServerError).await
+                let werr = log_error!(e.to_string(), 500);
+                respond_with_error(werr).await
             }
         },
         Err(e) => {
-            log_error!(RequestError::ChannelError(e.to_string()));
-            respond_with_error(e.to_string(), StatusCode::InternalServerError).await
+            let werr = log_error!(e.to_string(), 500);
+            respond_with_error(werr).await
         }
     }
 }
@@ -64,22 +87,24 @@ async fn get_all(reader_tx: Sender<ReadJob>) -> Result<Response, Error> {
 /// * A [`Result`] containing the `Response` with the result of the read operation
 /// or an [`Error`] if the operation failed.
 pub async fn send_to_reader(id: String, reader_tx: Sender<ReadJob>) -> Result<Response, Error> {
-    let (done_tx, done_rx) = oneshot::channel::<ReadResponse>();
-    let read_job = ReadJob::new(done_tx, id);
+    let (tx, rx) = oneshot::channel::<ReadResponse>();
+    let job = ReadJob { id: Some(id), tx };
 
-    reader_tx.send(read_job).await.unwrap();
+    reader_tx.send(job).await.unwrap();
     READER_CHANNEL_QUEUE.set(reader_tx.capacity() as i64);
 
-    match done_rx.await {
+    match rx.await {
         Ok(response) => match response {
-            ReadResponse::Success(r) => respond(r).await,
+            ReadResponse::Module(_) => todo!(),
+            ReadResponse::Size(r) => respond(r).await,
             ReadResponse::Fail(e) => {
-                respond_with_error(log_error!(e).to_string(), StatusCode::InternalServerError).await
+                let werr = log_error!(e.to_string(), 500);
+                respond_with_error(werr).await
             }
         },
         Err(e) => {
-            log_error!(RequestError::ChannelError(e.to_string()));
-            respond_with_error(e.to_string(), StatusCode::InternalServerError).await
+            let werr = log_error!(e.to_string(), 500);
+            respond_with_error(werr).await
         }
     }
 }

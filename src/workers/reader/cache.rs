@@ -18,14 +18,12 @@ lazy_static! {
     static ref CACHE_SIZE: usize = CONFIG.reader.cache_size;
 }
 
-type Id = String;
-
 /// An in-memory cache with a Least Recently Used (LRU) eviction strategy.
 pub struct Cache {
     /// A HashMap to store the cached data.
-    cached: HashMap<Id, WasmModule>,
+    cached: HashMap<String, WasmModule>,
     /// A VecDeque to maintain the order of recently used items.
-    queue: VecDeque<Id>,
+    queue: VecDeque<String>,
 }
 
 impl Cache {
@@ -51,15 +49,15 @@ impl Cache {
     /// ## Returns
     ///
     /// * An [`Option<WasmModule>`] containing the requested item or [`None`] if not found.
-    pub fn get<F>(&mut self, id: Id, f: F) -> Option<WasmModule>
+    pub fn get<F>(&mut self, id: &str, f: F) -> Option<WasmModule>
     where
-        F: FnOnce() -> Option<WasmModule>,
+        F: Fn(&str) -> Option<WasmModule>,
     {
-        match self.cached.get(id.as_str()) {
+        match self.cached.get(id) {
             Some(wasm_module) => Some(wasm_module.clone()),
-            None => match f() {
+            None => match f(id) {
                 Some(new_wasm_fn) => {
-                    self.put(id, new_wasm_fn.clone());
+                    self.put(id.to_string(), new_wasm_fn.clone());
                     Some(new_wasm_fn)
                 }
                 None => return None,
@@ -75,7 +73,7 @@ impl Cache {
     /// * `new_wasm_fn` - The item to be inserted.
     ///
     /// This method also handles cache eviction based on the LRU strategy.
-    pub fn put(&mut self, id: Id, new_wasm_fn: WasmModule) {
+    pub fn put(&mut self, id: String, new_wasm_fn: WasmModule) {
         if self.queue.len() >= *CACHE_SIZE {
             if let Some(removed_id) = self.queue.pop_back() {
                 self.cached.remove(removed_id.as_str());
@@ -85,7 +83,7 @@ impl Cache {
         self.cached.insert(id, new_wasm_fn);
     }
 
-    pub fn del(&mut self, id: Id) {
+    pub fn del(&mut self, id: String) {
         self.cached.remove(id.as_str());
         self.queue.retain(|key| key != id.as_str());
     }

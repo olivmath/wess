@@ -3,17 +3,17 @@ pub fn init_logger() {
 }
 
 macro_rules! log_error {
-    ($err:expr) => {
+    ($msg_value:expr, $status_value:expr) => {
         {
             use crate::metrics::constants::ERROR_COUNT;
             use log::error;
+            use crate::errors::WessError;
 
             ERROR_COUNT.inc();
 
-            let e = $err;
-            let e_str = e.to_string();
+            let e = WessError::new($msg_value,$status_value);
 
-            error!(target: "wess::err", "{}", e_str);
+            error!(target: "wess::err", "{}", e.to_string());
             e
         }
     };

@@ -2,6 +2,8 @@ use serde::Serialize;
 use serde_json::json;
 use tide::{Error, Response, StatusCode};
 
+use crate::errors::WessError;
+
 /// # Returns an error response with the provided message.
 ///
 /// ## Arguments
@@ -11,9 +13,9 @@ use tide::{Error, Response, StatusCode};
 /// ## Returns
 ///
 /// * A [`Result`] containing the error response.
-pub async fn respond_with_error(message: String, status: StatusCode) -> Result<Response, Error> {
-    Ok(Response::builder(status)
-        .body(json!({ "message": message }))
+pub async fn respond_with_error(error: WessError) -> Result<Response, Error> {
+    Ok(Response::builder(error.status)
+        .body(json!({ "message": error.msg }))
         .build())
 }
 

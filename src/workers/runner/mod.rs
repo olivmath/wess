@@ -18,11 +18,12 @@ pub mod models;
 
 use self::{
     engine::Runtime,
-    models::{RunJob, RunResponse, RunnerError},
+    models::{RunJob, RunResponse},
 };
 use crate::{
     config::CONFIG,
     database::{models::WasmModule, RocksDB},
+    errors::WessError,
 };
 use std::sync::Arc;
 use tokio::sync::{
@@ -73,7 +74,8 @@ impl Runner {
                 },
                 None => {
                     tokio::spawn(async move {
-                        responder.send(RunResponse::fail(RunnerError::WasmNotFound))
+                        let werr = log_error!("Wasm module not found".to_string(), 404);
+                        responder.send(RunResponse::fail(werr))
                     });
                 }
             };
@@ -97,12 +99,12 @@ impl Runner {
         &self,
         args: &[Value],
         wasm_module: WasmModule,
-        id: String
-    ) -> Result<RunResponse, RunnerError> {
+        id: String,
+    ) -> Result<RunResponse, WessError> {
         let mut runtime = Runtime::new(wasm_module.clone(), id);
         match runtime.run(args) {
             Ok(r) => Ok(RunResponse::new(r)),
-            Err(e) => Err(e),
+            Err(werr) => Err(werr),
         }
     }
 }
