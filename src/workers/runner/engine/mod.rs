@@ -13,8 +13,8 @@
 
 use crate::{
     database::models::WasmModule,
+    errors::WessError,
     metrics::constants::{WASM_COMPILER_TIME, WASM_EXECUTION_TIME},
-    workers::runner::models::RunnerError,
 };
 use std::time::Instant;
 use wasmer::{imports, Instance, Module, Store, Value};
@@ -43,8 +43,8 @@ impl Runtime {
     ///
     /// ## Returns
     ///
-    /// * A [`Result<wasmer::Value, RunnerError>`] containing either the function's result or an error.
-    pub fn run(&mut self, wasm_args: &[Value]) -> Result<Box<[wasmer::Value]>, RunnerError> {
+    /// * A [`Result<wasmer::Value, WessError>`] containing either the function's result or an error.
+    pub fn run(&mut self, wasm_args: &[Value]) -> Result<Box<[wasmer::Value]>, WessError> {
         let start = Instant::now();
         // TODO: make statefull
         // save the store in DB
@@ -53,8 +53,8 @@ impl Runtime {
             match Module::from_binary_unchecked(&store, &self.wasm_module.wasm) {
                 Ok(m) => m,
                 Err(e) => {
-                    let e = log_error!(RunnerError::CompilingError(e.to_string()));
-                    return Err(e);
+                    let werr = log_error!(format!("Compiling Error: {}", e.to_string()), 500);
+                    return Err(werr);
                 }
             }
         };
@@ -67,8 +67,8 @@ impl Runtime {
         let instance = match Instance::new(&mut store, &module, &import_object) {
             Ok(i) => i,
             Err(e) => {
-                let e = log_error!(RunnerError::InitializingError(e.to_string()));
-                return Err(e);
+                let werr = log_error!(format!("InitializingError: {}", e.to_string()), 500);
+                return Err(werr);
             }
         };
 
@@ -78,11 +78,15 @@ impl Runtime {
         {
             Ok(f) => f,
             Err(e) => {
-                let e = log_error!(RunnerError::InstantiateFunctionError(
-                    self.wasm_module.metadata.function_name.clone(),
-                    e.to_string(),
-                ));
-                return Err(e);
+                let werr = log_error!(
+                    format!(
+                        "Instantiate Function Error `{}`: {}",
+                        self.wasm_module.metadata.function_name.clone(),
+                        e.to_string()
+                    ),
+                    500
+                );
+                return Err(werr);
             }
         };
 
@@ -90,8 +94,8 @@ impl Runtime {
         let result = match wasm_function.call(&mut store, wasm_args) {
             Ok(r) => r,
             Err(e) => {
-                let e = log_error!(RunnerError::FunctionExecutionError(e.to_string()));
-                return Err(e);
+                let werr = log_error!(format!("Function Execution Error: {}", e.to_string()), 500);
+                return Err(werr);
             }
         };
         let duration = start.elapsed();

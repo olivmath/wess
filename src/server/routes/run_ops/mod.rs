@@ -13,28 +13,28 @@ mod utils;
 pub async fn make_run_op(mut req: Request<AppState>) -> Result<Response, Error> {
     let id = match get_id_from_request(&req) {
         Ok(id) => id,
-        Err(e) => return respond_with_error(e.err.to_string(), e.status).await,
+        Err(e) => return respond_with_error(e).await,
     };
 
     let wasm_module = match retrieve_wasm_module(&id, &req).await {
         Ok(wm) => wm,
-        Err(e) => return respond_with_error(e.err.to_string(), e.status).await,
+        Err(e) => return respond_with_error(e).await,
     };
 
     let request_args = match deserialize_request(&wasm_module, &mut req).await {
         Ok(args) => args,
-        Err(e) => return respond_with_error(e.err.to_string(), e.status).await,
+        Err(e) => return respond_with_error(e).await,
     };
 
     let result = match send_to_runner(id.clone(), request_args, req.state().runner_tx.clone()).await
     {
         Ok(r) => r,
-        Err(e) => return respond_with_error(e.err.to_string(), e.status).await,
+        Err(e) => return respond_with_error(e).await,
     };
 
     let response = match serialize_wasm_return(result, &wasm_module.metadata.return_type).await {
         Ok(r) => r,
-        Err(e) => return respond_with_error(e.err.to_string(), e.status).await,
+        Err(e) => return respond_with_error(e).await,
     };
 
     respond(response).await

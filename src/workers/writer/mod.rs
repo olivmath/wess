@@ -10,7 +10,7 @@
 
 pub mod models;
 
-use self::models::{WriteJob, WriteOps, WriterError};
+use self::models::WriteJob;
 use crate::{config::CONFIG, database::RocksDB};
 use std::sync::Arc;
 use tokio::{
@@ -49,40 +49,24 @@ impl Writer {
     pub async fn run(&mut self) {
         while let Some(job) = self.rx.recv().await {
             //
-            let job_type = job.write_type;
-            let wasm_req = job.write_req;
-            let id = job.id.as_str();
+            let wasm_module = job.write_module;
+            let id = job.id;
             let send_reader = self.tx.clone();
             //
-            match job_type {
-                WriteOps::Create => {
-                    if let Err(e) = self.db.add(id, wasm_req.unwrap()) {
-                        log_error!(WriterError::Create {
-                            id: id.to_string(),
-                            err: e.to_string()
-                        });
+            match wasm_module {
+                // CREATE/UPDATE OP
+                Some(wm) => {
+                    if let Err(e) = self.db.add(&id, wm) {
+                        log_error!(e.to_string(), 500);
                     }
                 }
-                WriteOps::Update => match self.db.upd(id, wasm_req.unwrap()) {
+                // DELETE OP
+                None => match self.db.del(&id) {
                     Ok(id) => {
                         spawn(async move { send_reader.send(id).await });
                     }
                     Err(e) => {
-                        log_error!(WriterError::Update {
-                            id: id.to_string(),
-                            err: e.to_string()
-                        });
-                    }
-                },
-                WriteOps::Delete => match self.db.del(id) {
-                    Ok(id) => {
-                        spawn(async move { send_reader.send(id).await });
-                    }
-                    Err(e) => {
-                        log_error!(WriterError::Delete {
-                            id: id.to_string(),
-                            err: e.to_string()
-                        });
+                        log_error!(e.to_string(), 500);
                     }
                 },
             }

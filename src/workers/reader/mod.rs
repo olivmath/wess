@@ -70,32 +70,41 @@ impl Reader {
     pub async fn run(&mut self) {
         loop {
             select! {
-                Some(job) = self.rx.recv() => {
-                    //
-                    let responder = job.responder;
-                    let db_instance = &self.db;
-                    let id = job.id;
-                    if id == "" {
-                        let r = db_instance.all().len().to_string();
-                        tokio::spawn(async move {
-                            responder.send(ReadResponse::fail(r))
-                        });
-                    } else {
-                        //
-                        match self.cache.get(id.clone(), || db_instance.get(id.as_str())) {
-                            Some(wasm_module) => {
-                                tokio::spawn(async move { responder.send(ReadResponse::new(wasm_module)) });
-                            }
-                            None => {
-                                tokio::spawn(
-                                    async move { responder.send(ReadResponse::fail("Not found".into())) },
-                                );
-                            }
-                        };
-                    }
-                }
                 Some(id) = self.rx_writer.recv() => {
                     self.cache.del(id)
+                },
+                Some(job) = self.rx.recv() => {
+                    let option_id = job.id.clone();
+                    let tx = job.tx;
+                    //
+                    match option_id {
+                        None => {
+                            let r = self.db.all().len().clone();
+                            tokio::spawn(async move {
+                                tx.send(ReadResponse::Size(r))
+                            });
+                        },
+                        Some(id) => {
+                            let db = &self.db;
+                            let f = |i: &str| db.get(i);
+                            let cache_result = self.cache.get(&id, f);
+
+                            match cache_result {
+                                Some(wasm_module) => {
+                                    tokio::spawn(async move {
+                                        tx.send(ReadResponse::Module(wasm_module))
+                                    });
+                                }
+                                None => {
+                                    tokio::spawn(
+                                        async move {
+                                        let werr = log_error!("Not found".to_string(), 404);
+                                        tx.send(ReadResponse::Fail(werr)) },
+                                    );
+                                }
+                            };
+                        }
+                    }
                 }
             }
         }

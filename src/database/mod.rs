@@ -4,7 +4,6 @@
 //!
 //! - [`RocksDB`]: A struct that provides a simple API for interacting with a RocksDB database.
 //! - [`WasmModule`]: A struct representing a WebAssembly function.
-//! - [`RocksDBError`]: An enumeration of potential errors that can be encountered while working with a RocksDB database.
 //!
 //! # Examples
 //!
@@ -32,7 +31,7 @@ use crate::metrics::constants::DATABASE_OPERATION_DURATION;
 use lazy_static::lazy_static;
 use log::{error, info};
 use rocksdb::{
-    DBWithThreadMode, Error as RocksDBError, IteratorMode, MultiThreaded, Options, DB as DataBase,
+    DBWithThreadMode, Error as WessError, IteratorMode, MultiThreaded, Options, DB as DataBase,
 };
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
@@ -113,8 +112,8 @@ impl RocksDB {
     /// ## Returns
     ///
     /// * A `Result` object that returns the key if the operation was successful,
-    /// or a `RocksDBError` object if the operation failed.
-    pub fn add(&mut self, key: &str, wasm: WasmModule) -> Result<String, RocksDBError> {
+    /// or a `WessError` object if the operation failed.
+    pub fn add(&mut self, key: &str, wasm: WasmModule) -> Result<String, WessError> {
         info!(target: "wess::tx", "CREATE {key}");
         DATABASE_OPERATIONS_TOTAL
             .with_label_values(&["write"])
@@ -126,7 +125,7 @@ impl RocksDB {
             .lock()
             .unwrap()
             .put(key, serde_json::to_vec(&wasm).unwrap())
-            .map_err(|e| log_error!(e))
+            .map_err(|e| log_error!(e.to_string(), 500))
             .and_then(|_| Ok(key.to_string()));
 
         let duration = start.elapsed();
@@ -156,7 +155,7 @@ impl RocksDB {
             .lock()
             .unwrap()
             .get(key)
-            .map_err(|e| log_error!(e))
+            .map_err(|e| log_error!(e.to_string(), 500))
             .unwrap_or_default();
 
         let duration = start.elapsed();
@@ -190,7 +189,7 @@ impl RocksDB {
             .map(|item| match item {
                 Ok((_, v)) => Some(serde_json::from_slice(&v).unwrap()),
                 Err(e) => {
-                    log_error!(e);
+                    log_error!(e.to_string(), 500);
                     None
                 }
             })
@@ -214,12 +213,12 @@ impl RocksDB {
     /// ## Returns
     ///
     /// * A `Result` object that returns the key if the operation was successful,
-    /// or a `RocksDBError` object if the operation failed.
+    /// or a `WessError` object if the operation failed.
     ///
     /// # Errors
     ///
-    /// Returns a `RocksDBError::NotFound` error if the key doesn't exist in the database.
-    pub fn upd(&mut self, key: &str, wasm: WasmModule) -> Result<String, RocksDBError> {
+    /// Returns a `WessError::NotFound` error if the key doesn't exist in the database.
+    pub fn upd(&mut self, key: &str, wasm: WasmModule) -> Result<String, WessError> {
         info!(target: "wess::tx", "UPDATE {key}");
         DATABASE_OPERATIONS_TOTAL
             .with_label_values(&["write"])
@@ -231,7 +230,7 @@ impl RocksDB {
             .lock()
             .unwrap()
             .put(key.as_bytes(), new_value)
-            .map_err(|e| log_error!(e))
+            .map_err(|e| log_error!(e.to_string(), 500))
             .unwrap();
 
         let duration = start.elapsed();
@@ -251,12 +250,12 @@ impl RocksDB {
     /// ## Returns
     ///
     /// * A `Result` object that returns the key if the operation was successful,
-    /// or a `RocksDBError` object if the operation failed.
+    /// or a `WessError` object if the operation failed.
     ///
     /// # Errors
     ///
-    /// Returns a `RocksDBError::NotFound` error if the key doesn't exist in the database.
-    pub fn del(&mut self, key: &str) -> Result<String, RocksDBError> {
+    /// Returns a `WessError::NotFound` error if the key doesn't exist in the database.
+    pub fn del(&mut self, key: &str) -> Result<String, WessError> {
         info!(target: "wess::tx", "DELETE {key}");
         DATABASE_OPERATIONS_TOTAL
             .with_label_values(&["write"])
@@ -267,7 +266,7 @@ impl RocksDB {
             .lock()
             .unwrap()
             .delete(key)
-            .map_err(|e| log_error!(e))
+            .map_err(|e| log_error!(e.to_string(), 500))
             .unwrap();
 
         let duration = start.elapsed();

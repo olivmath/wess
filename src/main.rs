@@ -31,6 +31,7 @@ mod logger;
 
 mod config;
 mod database;
+mod errors;
 mod metrics;
 mod server;
 mod workers;
