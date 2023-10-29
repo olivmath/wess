@@ -26,13 +26,12 @@
 pub mod models;
 
 use self::models::WasmModule;
+use crate::errors::WessError;
 use crate::metrics::constants::DATABASE_OPERATIONS_TOTAL;
 use crate::metrics::constants::DATABASE_OPERATION_DURATION;
 use lazy_static::lazy_static;
 use log::{error, info};
-use rocksdb::{
-    DBWithThreadMode, Error as WessError, IteratorMode, MultiThreaded, Options, DB as DataBase,
-};
+use rocksdb::{DBWithThreadMode, IteratorMode, MultiThreaded, Options, DB as DataBase};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
