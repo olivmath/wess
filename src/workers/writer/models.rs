@@ -13,6 +13,7 @@ use crate::database::models::WasmModule;
 
 /// # Write Job Type
 pub struct WriteJob {
+    pub write_op: WriteOps,
     pub write_module: Option<WasmModule>,
     pub id: String,
 }
@@ -29,15 +30,17 @@ impl WriteJob {
     /// ## Returns
     ///
     /// A new [`WriteJob`] instance containing the parameters passed as arguments.
-    pub fn new(write_module: Option<WasmModule>, id: String) -> Self {
+    pub fn new(write_module: Option<WasmModule>, id: String, write_op: WriteOps) -> Self {
         Self {
             write_module,
+            write_op,
             id,
         }
     }
 }
 
 /// # Write Operation Type
+#[derive(Clone)]
 pub enum WriteOps {
     Create,
     Update,
