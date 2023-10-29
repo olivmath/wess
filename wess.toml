@@ -1,6 +1,6 @@
 [server]
-port = 7770
-address = "0.0.0.0" 
+port = 80
+address = "0.0.0.0"
 
 [database]
 db = "rocksdb"
