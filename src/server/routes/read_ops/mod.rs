@@ -62,7 +62,7 @@ async fn get_all(reader_tx: Sender<ReadJob>) -> Result<Response, Error> {
     match rx.await {
         Ok(response) => match response {
             ReadResponse::Module(_) => todo!(),
-            ReadResponse::Size(r) => respond(r).await,
+            ReadResponse::Size(r) => respond(r, tide::StatusCode::Accepted).await,
             ReadResponse::Fail(e) => {
                 let werr = log_error!(e.to_string(), 500);
                 respond_with_error(werr).await
@@ -95,10 +95,10 @@ pub async fn send_to_reader(id: String, reader_tx: Sender<ReadJob>) -> Result<Re
 
     match rx.await {
         Ok(response) => match response {
-            ReadResponse::Module(_) => todo!(),
-            ReadResponse::Size(r) => respond(r).await,
+            ReadResponse::Module(wm) => respond(wm, tide::StatusCode::Accepted).await,
+            ReadResponse::Size(r) => respond(r, tide::StatusCode::Accepted).await,
             ReadResponse::Fail(e) => {
-                let werr = log_error!(e.to_string(), 500);
+                let werr = log_error!(e.to_string(), e.status.into());
                 respond_with_error(werr).await
             }
         },
