@@ -10,7 +10,7 @@
 
 pub mod models;
 
-use self::models::WriteJob;
+use self::models::{WriteJob, WriteOps};
 use crate::{config::CONFIG, database::RocksDB};
 use std::sync::Arc;
 use tokio::{
@@ -48,25 +48,30 @@ impl Writer {
     /// # Runs the async executor for writing data into the database.
     pub async fn run(&mut self) {
         while let Some(job) = self.rx.recv().await {
-            //
-            let wasm_module = job.write_module;
-            let id = job.id;
+            let id = job.id.clone();
             let send_reader = self.tx.clone();
-            //
-            match wasm_module {
-                // CREATE/UPDATE OP
-                Some(wm) => {
-                    if let Err(e) = self.db.add(&id, wm) {
-                        log_error!(e.to_string(), 500);
+
+            match job.write_op {
+                WriteOps::Create => {
+                    if let Err(e) = self.db.add(&id, job.write_module.expect("not found item")) {
+                        log_error!(e.to_string(), e.status.into());
                     }
                 }
-                // DELETE OP
-                None => match self.db.del(&id) {
+                WriteOps::Update => match self.db.upd(&id, job.write_module.unwrap()) {
                     Ok(id) => {
                         spawn(async move { send_reader.send(id).await });
                     }
                     Err(e) => {
-                        log_error!(e.to_string(), 500);
+                        log_error!(e.to_string(), e.status.into());
+                    }
+                },
+
+                WriteOps::Delete => match self.db.del(&id) {
+                    Ok(id) => {
+                        spawn(async move { send_reader.send(id).await });
+                    }
+                    Err(e) => {
+                        log_error!(e.to_string(), e.status.into());
                     }
                 },
             }
