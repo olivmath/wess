@@ -218,6 +218,10 @@ impl RocksDB {
     ///
     /// Returns a `WessError::NotFound` error if the key doesn't exist in the database.
     pub fn upd(&mut self, key: &str, wasm: WasmModule) -> Result<String, WessError> {
+        if self.get(&key).is_none() {
+            return Err(log_error!("Not found".to_string(), 404));
+        };
+
         info!(target: "wess::tx", "UPDATE {key}");
         DATABASE_OPERATIONS_TOTAL
             .with_label_values(&["write"])
