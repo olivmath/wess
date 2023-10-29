@@ -1,41 +1,32 @@
-Feature: Testing the Wess API
+Feature: Test WasmModule CRUD Operations
 
-    Scenario: Creating a new module
-        Given a WebAssembly module called "the_answer" with function "the_answer", with "i32", with this args
-            """
-            [
-                {
-                    "type": "",
-                    "name": ""
-                }
-            ]
-            """
-        When I create the module
-        Then the response status code should be "200"
+    Background:
+        Given the following WasmModules are available:
+            | module     | functions                                                 | returns                   | args                      |
+            | the_answer | [the_answer]                                              | [I32]                     | []                        |
+            | fibonacci  | [fibonacci]                                               | [I32]                     | [I64]                     |
+            | sum/sumi32 | [sum]                                                     | [I32]                     | [I32, I32]                |
+            | sum/sumf32 | [sum]                                                     | [F32]                     | [F32, F32]                |
+            | sum/sumi64 | [sum]                                                     | [I64]                     | [I64, I64]                |
+            | sum/sumf64 | [sum]                                                     | [F64]                     | [F64, F64]                |
+            | syscall    | [random, random_numbers, random_numbers_len, free_memory] | [[I32], [I32], [I32], []] | [[I32], [I32], [], [I32]] |
 
-    # Scenario: Updating an existing module
-    #     Given a WebAssembly module called "the_answer" with function "answer", with "i32", with this args
-    #         """
-    #         [
-    #             {
-    #                 "type": "",
-    #                 "name": ""
-    #             }
-    #         ]
-    #         """
-    #     When update module "7e3a7557831502ce9b600225e21e29b38240b460eb7bbaade1eb6e73af03e7ec"
-    #     Then the response status code should be "200"
+    Scenario: Create a WasmModule
+        When sending the wasm "the_answer" to create a new WasmModule
+        And the response status code is "202"
+        And the response body matches the default UUID
+        And the ID is saved in "the_answer_created"
+        Then Wess must log the "CREATE" operation with the ID "the_answer_created"
+        And log must matches the pattern "(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}) \| (ERROR|WARN|INFO|DEBUG|TRACE) (wess|wess::tx|wess::err) \| (src\/\S+\.rs:\d+) - (.+)"
 
-    # Scenario: Deleting an existing module
-    #     When I remove module "7e3a7557831502ce9b600225e21e29b38240b460eb7bbaade1eb6e73af03e7ec"
-    #     Then the response status code should be "200"
+    Scenario: Updating a WasmModule
+        When sending the wasm "fibonacci" to update the ID "the_answer_created"
+        And the response status code is "202"
+        Then Wess must log the "UPDATE" operation with the ID "the_answer_created"
+        And log must matches the pattern "(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}) \| (ERROR|WARN|INFO|DEBUG|TRACE) (wess|wess::tx|wess::err) \| (src\/\S+\.rs:\d+) - (.+)"
 
-    Scenario: Running a function in an existing module
-        When run module "0187280178985429a5d57aa7e1d40d48d6da3c5881488cd5cdbe190b07cbaa75" with args
-            """
-            {
-                "args": []
-            }
-            """
-        Then the response status code should be "200"
-        And should response with "42"
+    Scenario: Delete a WasmModule
+        When sending the ID "the_answer_created" to delete
+        And the response status code is "202"
+        Then Wess must log the "DELETE" operation with the ID "the_answer_created"
+        And log must matches the pattern "(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}) \| (ERROR|WARN|INFO|DEBUG|TRACE) (wess|wess::tx|wess::err) \| (src\/\S+\.rs:\d+) - (.+)"
