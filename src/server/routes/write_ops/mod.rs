@@ -24,17 +24,17 @@ use wasmer::{Engine, Module};
 /// ## Arguments
 ///
 /// * `req` - The [`Request`] object containing the write operation to perform.
-/// * `write_type` - The type of write operation to perform.
+/// * `write_ops` - The type of write operation to perform.
 ///
 /// # Returns
 ///
 /// A [`Result`] containing the [`Response`] object.
 pub async fn make_write_op(
     mut req: Request<AppState>,
-    write_type: WriteOps,
+    write_ops: WriteOps,
 ) -> Result<Response, Error> {
     let reader_tx = req.state().reader_tx.clone();
-    match write_type {
+    match write_ops {
         WriteOps::Create => {
             let id: Uuid = Uuid::new_v4();
             match deserialize_request(&mut req).await {
@@ -43,6 +43,7 @@ pub async fn make_write_op(
                         Some(body_request),
                         id.to_string(),
                         req.state().writer_tx.clone(),
+                        WriteOps::Create,
                     )
                     .await
                 }
@@ -52,14 +53,22 @@ pub async fn make_write_op(
         WriteOps::Update => match verify_id(&req, reader_tx).await {
             Ok(id) => match deserialize_request(&mut req).await {
                 Ok(write_request) => {
-                    send_to_writer(Some(write_request), id, req.state().writer_tx.clone()).await
+                    send_to_writer(
+                        Some(write_request),
+                        id,
+                        req.state().writer_tx.clone(),
+                        WriteOps::Update,
+                    )
+                    .await
                 }
                 Err(e) => respond_with_error(e).await,
             },
             Err(e) => respond_with_error(e).await,
         },
         WriteOps::Delete => match verify_id(&req, reader_tx).await {
-            Ok(id) => send_to_writer(None, id, req.state().writer_tx.clone()).await,
+            Ok(id) => {
+                send_to_writer(None, id, req.state().writer_tx.clone(), WriteOps::Delete).await
+            }
             Err(e) => respond_with_error(e).await,
         },
     }
@@ -69,8 +78,9 @@ async fn send_to_writer(
     write_request: Option<WasmModule>,
     id: String,
     tx: Sender<WriteJob>,
+    write_ops: WriteOps,
 ) -> Result<Response, Error> {
-    let write_job = WriteJob::new(write_request, id.clone());
+    let write_job = WriteJob::new(write_request, id.clone(), write_ops.clone());
 
     task::spawn(async move {
         if let Err(e) = tx.send(write_job).await {
@@ -79,10 +89,35 @@ async fn send_to_writer(
         WRITER_CHANNEL_QUEUE.set(tx.capacity().try_into().unwrap());
     });
 
-    respond(serde_json::json!({
-        "id": id
-    }))
-    .await
+    match write_ops {
+        WriteOps::Create => {
+            respond(
+                serde_json::json!({
+                    "id": id
+                }),
+                tide::StatusCode::Accepted,
+            )
+            .await
+        }
+        WriteOps::Update => {
+            respond(
+                serde_json::json!({
+                    "id": id
+                }),
+                tide::StatusCode::Accepted,
+            )
+            .await
+        }
+        WriteOps::Delete => {
+            respond(
+                serde_json::json!({
+                    "id": id
+                }),
+                tide::StatusCode::Accepted,
+            )
+            .await
+        }
+    }
 }
 
 async fn verify_id(
