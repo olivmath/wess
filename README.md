@@ -79,7 +79,7 @@ Details
 1. receive a json
 2. validate it
 3. create a new uuid
-4. respond 201 | 400 | 404 | 500
+4. respond 202 | 400 | 404 | 500
 5. **[Async after return]** send the json to [Writer]()
 6. **[Async after return]** Writer perform op (Create | Update | delete)
 
