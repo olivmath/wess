@@ -1,7 +1,5 @@
-version: '3'
-
 services:
-  api:
+  wess:
     build:
       context: .
     volumes:
