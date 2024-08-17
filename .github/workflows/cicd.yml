@@ -1,0 +1,53 @@
+name: Rust Project CI
+
+on:
+  push:
+    tags:
+      - '*'  # Dispara o workflow apenas quando uma nova tag é criada
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # Install Rust toolchain
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+        override: true
+
+    # Build with Cargo
+    - name: Build with Cargo
+      run: cargo b
+
+    # Build Docker image with the tag version
+    - name: Build Docker Image
+      run: docker build -t wess:${{ github.ref_name }} .
+
+    # Push Docker image to registry
+    - name: Push Docker Image
+      run: docker push wess:${{ github.ref_name }}
+
+    # Run tests with Cargo
+    - name: Run Cargo Tests
+      run: cargo t
+
+    # Install Python and Poetry
+    - name: Install Python and Poetry
+      run: |
+        sudo apt-get update
+        sudo apt-get install python3 python3-pip -y
+        pip install poetry
+
+    # Run the Rust project and Python Behave tests
+    - name: Run Cargo and Python Behave
+      run: |
+        cargo r
+        poetry install
+        poetry run behave tests/behave/features
