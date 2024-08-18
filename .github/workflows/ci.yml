@@ -1,6 +1,9 @@
 name: Rust Project CI
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     tags:
       - '*'
@@ -48,5 +51,5 @@ jobs:
     # Run the Rust project and Python Behave tests
     - name: Run Cargo and Python Behave
       run: |
-        poetry install
+        poety install
         poetry run behave tests/behave/features
