@@ -19,9 +19,9 @@ COPY --from=cacher /usr/local/cargo /usr/local/cargo
 RUN apt update && apt install libclang-dev -y
 RUN cargo build -r
 
-FROM gcr.io/distroless/cc-debian11
+FROM ubuntu
 WORKDIR /wess
 COPY --from=builder /wess/target/release/wess /wess
 COPY wess.toml wess.yaml ./
 EXPOSE 7770
-CMD [ "./wess" ]
+CMD ["./wess"]

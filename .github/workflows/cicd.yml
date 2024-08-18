@@ -3,7 +3,7 @@ name: Rust Project CI
 on:
   push:
     tags:
-      - '*'  # Dispara o workflow apenas quando uma nova tag é criada
+      - '*'
 
 jobs:
   build:
@@ -48,6 +48,5 @@ jobs:
     # Run the Rust project and Python Behave tests
     - name: Run Cargo and Python Behave
       run: |
-        cargo r
         poetry install
         poetry run behave tests/behave/features
