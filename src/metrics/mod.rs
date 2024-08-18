@@ -3,15 +3,18 @@ pub mod constants;
 use self::constants::{CPU_USAGE, DATABASE_SIZE, MEMORY_USAGE};
 use crate::database::DB;
 use std::{sync::Arc, time::Duration};
-use sysinfo::{ProcessExt, System, SystemExt};
+use sysinfo::{System, get_current_pid};
 
 pub async fn collect_usage_metrics() {
     loop {
-        let mut sys = System::new_all();
+        let mut sys = System::new();
         sys.refresh_all();
-        let process = sys.process(sysinfo::get_current_pid().unwrap()).unwrap();
-        let cpu_usage = process.cpu_usage() as i64;
-        let memory_usage = process.memory() as i64;
+        
+        MEMORY_USAGE.set(sys.used_memory() as i64);
+        if let Ok(pid) = get_current_pid() {
+            CPU_USAGE.set(sys.process(pid).unwrap().cpu_usage() as i64);
+        }
+
         let db = Arc::clone(&DB);
         let db_size = db
             .lock()
@@ -20,9 +23,8 @@ pub async fn collect_usage_metrics() {
             .unwrap()
             .unwrap() as i64;
 
-        CPU_USAGE.set(cpu_usage);
-        MEMORY_USAGE.set(memory_usage);
+
         DATABASE_SIZE.set(db_size);
-        tokio::time::sleep(Duration::from_secs(15)).await;
+        tokio::time::sleep(Duration::from_secs(5)).await;
     }
 }
