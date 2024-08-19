@@ -47,12 +47,12 @@ use tokio::{
 };
 use workers::{reader::Reader, runner::Runner, writer::Writer};
 
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread", worker_threads = 8)]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    init_logger();
     tokio::spawn(collect_usage_metrics());
 
     let config = Arc::clone(&CONFIG);
-    init_logger();
 
     info!("------------------------------------------------");
     info!("Starting Wess");
@@ -100,6 +100,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
     };
 
-    try_join!(server_task, runner_task, writer_task, reader_task).unwrap();
+    try_join!(
+        server_task,
+        runner_task,
+        writer_task,
+        reader_task
+    )
+    .unwrap();
     Ok(())
 }

@@ -45,7 +45,7 @@ pub async fn make_write_op(
                         req.state().writer_tx.clone(),
                         WriteOps::Create,
                     )
-                        .await
+                    .await
                 }
                 Err(e) => respond_with_error(e).await,
             }
@@ -59,7 +59,7 @@ pub async fn make_write_op(
                         req.state().writer_tx.clone(),
                         WriteOps::Update,
                     )
-                        .await
+                    .await
                 }
                 Err(e) => respond_with_error(e).await,
             },
@@ -97,7 +97,7 @@ async fn send_to_writer(
                 }),
                 tide::StatusCode::Accepted,
             )
-                .await
+            .await
         }
         WriteOps::Update => {
             respond(
@@ -106,7 +106,7 @@ async fn send_to_writer(
                 }),
                 tide::StatusCode::Accepted,
             )
-                .await
+            .await
         }
         WriteOps::Delete => {
             respond(
@@ -115,7 +115,7 @@ async fn send_to_writer(
                 }),
                 tide::StatusCode::Accepted,
             )
-                .await
+            .await
         }
     }
 }

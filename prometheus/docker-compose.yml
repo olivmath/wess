@@ -10,9 +10,23 @@ services:
   prometheus:
     image: prom/prometheus
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert-rules.yml:/etc/prometheus/alert-rules.yml
+      - ../prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    depends_on:
+      - besu
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    volumes:
+      - ./alert-manager.yml:/prometheus/alert-manager.yml
+    command:
+      - "--config.file=/prometheus/alert-manager.yml"
+    ports:
+      - "9093:9093"
+    depends_on:
+      - prometheus
 
   grafana:
     image: grafana/grafana
@@ -24,6 +38,6 @@ services:
       - "3000:3000"
 
 volumes:
+  grafana-storage:
   rocksdb:
   logs:
-  grafana-storage:
