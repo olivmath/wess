@@ -1,13 +1,11 @@
 services:
   wess:
-    build:
-      context: .
+    image: olivmath/wess
     volumes:
-      - rocksdb:/caminho/para/dados
-      - logs:/caminho/para/logs
+      - rocksdb:/etc/rocksdb
+      - logs:/etc/wess/logs
     ports:
-      - "7770:7770"
-    command: [ "cargo", "r", "-r"]
+      - "7770:80"
 
   prometheus:
     image: prom/prometheus
