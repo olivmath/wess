@@ -1,8 +1,0 @@
-global:
-  scrape_interval: 5s
-
-scrape_configs:
-  - job_name: "wess"
-    static_configs:
-      - targets: ['wess:7770']
-      # - targets: ['host.docker.internal:7770'] for run wess outside docker

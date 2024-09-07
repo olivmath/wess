@@ -1,6 +1,6 @@
 pub mod constants;
 
-use self::constants::{CPU_USAGE, DATABASE_SIZE, MEMORY_USAGE, APP_VERSION};
+use self::constants::{APP_VERSION, CPU_USAGE, DATABASE_SIZE, MEMORY_USAGE};
 use crate::database::DB;
 use std::{sync::Arc, time::Duration};
 use sysinfo::{get_current_pid, System};
