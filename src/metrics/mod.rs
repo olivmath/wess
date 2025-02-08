@@ -3,7 +3,7 @@ pub mod constants;
 use self::constants::{CPU_USAGE, DATABASE_SIZE, MEMORY_USAGE};
 use crate::database::DB;
 use std::{sync::Arc, time::Duration};
-use sysinfo::{ProcessExt, System, SystemExt};
+use sysinfo::{Process, System};
 
 pub async fn collect_usage_metrics() {
     loop {
