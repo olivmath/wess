@@ -1,6 +1,6 @@
 [package]
 name = "wess"
-version = "1.4.0"
+version = "1.4.1"
 authors = ["Lucas Oliveira olivmath@protonmail.com"]
 edition = "2018"
 
