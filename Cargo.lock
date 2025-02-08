@@ -3322,7 +3322,7 @@ dependencies = [
 
 [[package]]
 name = "wess"
-version = "1.4.2"
+version = "1.4.3"
 dependencies = [
  "async-std",
  "lazy_static",
