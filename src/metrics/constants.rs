@@ -1,8 +1,8 @@
 use lazy_static::lazy_static;
 use prometheus::{
     exponential_buckets, register_histogram, register_histogram_vec, register_int_counter,
-    register_int_counter_vec, register_int_gauge, Histogram, HistogramVec, IntCounter,
-    IntCounterVec, IntGauge,
+    register_int_counter_vec, register_int_gauge, register_int_gauge_vec, Histogram, HistogramVec,
+    IntCounter, IntCounterVec, IntGauge, IntGaugeVec,
 };
 
 #[rustfmt::skip]
@@ -85,4 +85,10 @@ lazy_static! {
         &["function_name"],
         exponential_buckets(0.000005, 2.0, 12).unwrap_or_else(|e| panic!("Metric create `WASM_EXECUTION_TIME` failed, {}", e))
     ).unwrap_or_else(|e| panic!("Metric create `WASM_EXECUTION_TIME` failed, {}", e));
+
+    pub static ref APP_VERSION: IntGaugeVec = register_int_gauge_vec!(
+        "wess_app_version",
+        "Version of the Wess application",
+        &["version"]
+    ).unwrap_or_else(|e| panic!("Metric create `APP_VERSION` failed,  {}", e));
 }

@@ -1,0 +1,18 @@
+global:
+route:
+  receiver: Discord
+  group_by: ["alertname"]
+  group_wait: 1s
+  group_interval: 1s
+  repeat_interval: 5s
+
+  routes:
+    - receiver: Discord
+      match:
+        team: "dev"
+
+receivers:
+  - name: Discord
+    discord_configs:
+      - webhook_url: "https://discord.com/api/webhooks/1281817423258976276/if_7P45C1n7ALgM4B9qF-QCDMcqcZAXkfx5yntQ86WHUff64CUbuMEgTSAHrvns5tZzF"
+        message: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"

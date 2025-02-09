@@ -1,6 +1,9 @@
 name: Rust Project CI
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     tags:
       - '*'
@@ -26,13 +29,13 @@ jobs:
     - name: Build with Cargo
       run: cargo b
 
-    # Build Docker image with the tag version
-    - name: Build Docker Image
-      run: docker build -t wess:${{ github.ref_name }} .
+    # # Build Docker image with the tag version
+    # - name: Build Docker Image
+    #   run: docker build -t wess:${{ github.ref_name }} .
 
-    # Push Docker image to registry
-    - name: Push Docker Image
-      run: docker push wess:${{ github.ref_name }}
+    # # Push Docker image to registry
+    # - name: Push Docker Image
+    #   run: docker push wess:${{ github.ref_name }}
 
     # Run tests with Cargo
     - name: Run Cargo Tests
@@ -48,5 +51,5 @@ jobs:
     # Run the Rust project and Python Behave tests
     - name: Run Cargo and Python Behave
       run: |
-        poetry install
+        poety install
         poetry run behave tests/behave/features

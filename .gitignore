@@ -3,3 +3,8 @@ rocksdb/
 target/
 log/
 summary.html
+
+.idea
+.vscode
+
+.DS_Store

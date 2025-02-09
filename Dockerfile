@@ -1,7 +1,8 @@
 FROM rust as planner
 WORKDIR /wess
 RUN cargo install cargo-chef
-COPY . .
+COPY src src
+COPY Cargo.toml Cargo.toml
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM rust as cacher
@@ -13,10 +14,12 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 FROM rust as builder
 WORKDIR /wess
-COPY . .
+COPY src src
+COPY Cargo.toml Cargo.toml
 COPY --from=cacher /wess/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
-RUN apt update && apt install libclang-dev -y
+RUN apt update
+RUN apt install libclang-dev -y
 RUN cargo build -r
 
 FROM ubuntu
