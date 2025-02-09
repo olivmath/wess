@@ -1,0 +1,82 @@
+services:
+  influxdb:
+    image: influxdb:1.8
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=k6
+      - INFLUXDB_DATA_MAX_CONCURRENT_WRITES=64
+      - INFLUXDB_DATA_MAX_BODY_SIZE=25MB
+      - INFLUXDB_HTTP_MAX_CONNECTIONS=1024
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+
+  promtail:
+    image: grafana/promtail
+    ports:
+      - "9080:9080"
+    volumes:
+      - ../logs:/var/log/wess
+      - ./promtail:/etc/promtail
+    networks:
+      - wess
+
+  loki:
+    image: grafana/loki
+    ports:
+      - "3100:3100"
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+      - -print-config-stderr=true
+    networks:
+      - wess
+
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - wess
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    volumes:
+      - ./alert-manager:/prometheus
+    command:
+      - "--config.file=/prometheus/alert-manager.yml"
+    ports:
+      - "9093:9093"
+    networks:
+      - wess
+
+  grafana:
+    image: grafana/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana/dashboard:/var/lib/grafana/dashboards
+      - ./grafana:/etc/grafana/provisioning
+      - grafana-storage:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - wess
+
+networks:
+  wess:
+
+
+volumes:
+  grafana-storage:
+  influxdb_data:
